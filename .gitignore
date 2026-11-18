@@ -1,0 +1,13 @@
+node_modules/
+public/
+artifacts/
+.wrangler/
+.dev.vars*
+.env*
+!.env.example
+*.sqlite*
+*.db*
+*.pem
+*.key
+wrangler.test.json
+wrangler.production.json

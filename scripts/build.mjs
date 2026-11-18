@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+fs.mkdirSync('public',{recursive:true});fs.cpSync('vendor/original-board/assets','public/assets',{recursive:true});
+let html=fs.readFileSync('vendor/original-board/index.html','utf8');
+const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];if(scripts.length!==1)throw Error('Unexpected original app structure');
+let app=scripts[0][1];const boot=app.indexOf('(async function boot(){');if(boot<0)throw Error('Boot anchor missing');app=app.slice(0,boot);
+app=app.replaceAll('flush();render()','save();render()').replaceAll('Project saved.','Project updated; syncing…').replaceAll('Review saved.','Review updated; syncing…').replaceAll('Report saved.','Report updated; syncing…');
+const persistStart=app.indexOf('function save(){'),persistEnd=app.indexOf('function toast(',persistStart);if(persistStart<0||persistEnd<0)throw Error('Persistence anchors missing');app=app.slice(0,persistStart)+app.slice(persistEnd);app=app.replace(/function route\(\)\{[^\n]+\}\n/,'');
+app=app.replaceAll('Drafts save automatically on this device as you type.','Drafts sync to your account. Wait for the saved status before leaving.');
+app+='\n'+fs.readFileSync('src/cloud-ui.js','utf8');fs.writeFileSync('public/app.js',app);html=html.replace(scripts[0][0],'<script src="/app.js"></script>');
+html=html.replace('</head>','<style>.side[hidden]{display:none!important}.heatcell:focus-visible{outline:3px solid white;outline-offset:1px}#accountBar{margin-top:20px}#savestate{overflow-wrap:anywhere}.scroll{max-width:100%;overflow:auto}#authForm label{display:grid;gap:8px}.app:has(.side[hidden]) main{margin:0}</style></head>');fs.writeFileSync('public/index.html',html);
+fs.writeFileSync('public/_headers',`/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  X-Frame-Options: DENY\n  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'\n`);
+console.log('Original board extended with account storage and activity UI; no user records bundled.');

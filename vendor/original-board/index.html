@@ -1,0 +1,848 @@
+<!doctype html><html lang="en"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Personal Board of Directors</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/assets/fonts.css">
+<style>
+/* Layout: fixed navigation rail + single reading column; cards only for discrete objects (projects, tiles, the report). */
+:root{
+  color-scheme:dark;
+  --bg:#07131B; --surface:#10232C; --surface-2:#16303B; --line:rgba(148,163,184,.16); --line-strong:rgba(148,163,184,.32);
+  --accent:#04CED4; --accent-dim:rgba(4,206,212,.12); --fg:#FFFFFF; --muted:#94A3B8;
+  --good:#3DD68C; --warn:#F5B94A; --bad:#F2707A; --on-accent:#04222A;
+  --font:'Manrope','Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:14px; --r-sm:9px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p{margin:0}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+h3{font-size:15px;font-weight:700}
+a{color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:13px} .num{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:0;align-self:start;height:100vh;border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+.brand{padding:0 8px;display:flex;flex-direction:column;gap:2px}
+.brand b{font-size:14px;font-weight:800;letter-spacing:.04em}
+.brand span{font-size:11px;color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav .grp{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:12px 10px 4px}
+.nav a{display:block;padding:8px 10px;border-radius:var(--r-sm);color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap}
+.nav a:hover{color:var(--fg);background:var(--surface)}
+.nav a[aria-current="page"]{color:var(--fg);background:var(--surface);box-shadow:inset 2px 0 0 var(--accent)}
+.savestate{margin-top:auto;padding:0 10px;font-size:12px;color:var(--muted)}
+.savestate.err{color:var(--bad)}
+main{min-width:0;padding-block:30px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+@media(min-width:861px){main{padding-left:max(36px,env(safe-area-inset-left,0px));padding-right:max(36px,env(safe-area-inset-right,0px))}}
+@media(max-width:860px){
+  .app{display:block}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:14px 0 10px;gap:10px;overflow:visible}
+  .brand{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .nav{flex-direction:row;overflow-x:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));gap:4px;scrollbar-width:none}
+  .nav .grp{display:none}
+  .nav a[aria-current="page"]{box-shadow:inset 0 -2px 0 var(--accent)}
+  .savestate{margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  main{padding-block:22px 60px}
+  h1{font-size:22px}
+}
+
+.head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.head>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row.end{justify-content:flex-end}
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-width:0}
+.section{display:flex;flex-direction:column;gap:14px}
+.section>.sh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:baseline}
+.grid{display:grid;gap:12px}
+.g-tiles{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.g-2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g-3{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile .v{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+.tile .v small{font-size:14px;color:var(--muted);font-weight:600}
+.tile .k{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.tile .s{font-size:12px;color:var(--muted)}
+.insight{border:1px solid rgba(4,206,212,.45);background:linear-gradient(0deg,var(--accent-dim),var(--accent-dim)),var(--surface);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:8px}
+.insight .big{font-size:19px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.empty{border:1px dashed var(--line-strong);border-radius:var(--r);padding:22px;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.empty b{color:var(--fg)}
+
+.btn{font:inherit;font-weight:700;font-size:13.5px;border-radius:var(--r-sm);border:1px solid var(--line-strong);background:transparent;color:var(--fg);padding:9px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;line-height:1.2}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.08);color:var(--on-accent)}
+.btn.big{padding:13px 20px;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.btn.ghost{border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--fg);border-color:var(--line-strong)}
+.btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+.btn.sm{padding:6px 10px;font-size:12.5px}
+.btn[disabled]{opacity:.5;cursor:default}
+
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label,.flabel{font-weight:600;font-size:14px}
+.hint{font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=date],input[type=month],input[type=number],input[type=url],select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:9px 11px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:72px;field-sizing:content}
+input::placeholder,textarea::placeholder{color:rgba(148,163,184,.55)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex:none}
+input[type=range]{accent-color:var(--accent);width:100%}
+.line{display:grid;gap:8px;align-items:center}
+.line.c-pri{grid-template-columns:auto minmax(0,1fr)}
+.line.c-com{grid-template-columns:minmax(0,2fr) 140px minmax(0,1.5fr) auto}
+.line.c-obs{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.line.c-time{grid-template-columns:minmax(0,1fr) 96px 130px auto}
+.line.c-ev{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+.line.c-pp{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) 110px}
+.line.c-pd{grid-template-columns:minmax(0,1.2fr) 140px minmax(0,2fr)}
+@media(max-width:640px){.line.c-com,.line.c-obs,.line.c-time,.line.c-ev,.line.c-pp,.line.c-pd{grid-template-columns:minmax(0,1fr)}.line.multi{padding:12px;border:1px solid var(--line);border-radius:var(--r-sm)}}
+.block{border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;display:flex;flex-direction:column;gap:10px}
+.rsec{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-direction:column;gap:16px}
+.rsec>header{display:flex;gap:12px;align-items:baseline}
+.rsec>header .n{color:var(--accent);font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.rate{display:flex;gap:6px;flex-wrap:wrap}
+.rate label{position:relative;font-weight:700}
+.rate input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.rate span{display:grid;place-items:center;width:40px;height:36px;border:1px solid var(--line-strong);border-radius:var(--r-sm);font-variant-numeric:tabular-nums}
+.rate input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.rate input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.scorerow{display:grid;grid-template-columns:170px auto minmax(0,1fr);gap:12px;align-items:center}
+@media(max-width:720px){.scorerow{grid-template-columns:minmax(0,1fr)}}
+.note{border-left:2px solid var(--line-strong);padding:2px 0 2px 12px;color:var(--muted);font-size:13px}
+.banner{border:1px solid rgba(61,214,140,.4);border-radius:var(--r);padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.banner.warn{border-color:rgba(245,185,74,.45)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap}
+.pill.good{color:var(--good);border-color:rgba(61,214,140,.4)} .pill.warn{color:var(--warn);border-color:rgba(245,185,74,.4)} .pill.bad{color:var(--bad);border-color:rgba(242,112,122,.4)} .pill.acc{color:var(--accent);border-color:rgba(4,206,212,.4)}
+.proj{display:flex;flex-direction:column;gap:12px}
+.proj .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.proj h3{font-size:16px;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 12px;font-size:13.5px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;overflow-wrap:anywhere}
+.bar{height:6px;border-radius:99px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.tl{display:flex;flex-direction:column}
+.tl .it{display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center}
+@media(max-width:640px){.tl .it{grid-template-columns:minmax(0,1fr)}}
+.tl .it p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chart svg{width:100%;max-width:460px;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:10px;font-family:var(--font);font-variant-numeric:tabular-nums}
+.chart .end{fill:var(--fg);font-weight:700;font-size:11px}
+.why{display:grid;grid-template-columns:64px minmax(0,1fr) 150px;gap:10px;align-items:start}
+@media(max-width:640px){.why{grid-template-columns:minmax(0,1fr)}}
+.why .lab{font-weight:800;color:var(--accent);font-size:13px;padding-top:10px}
+.report{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,4vw,40px);overflow-wrap:anywhere}
+.report h1{font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:700}
+.report h1+h1{font-size:24px;letter-spacing:-.01em;color:var(--fg);font-weight:800;margin-top:4px}
+.report h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:26px 0 10px;padding-top:16px;border-top:1px solid var(--line)}
+.report h3{margin:12px 0 4px;font-size:14px}
+.report p{margin:6px 0;max-width:72ch}
+.report ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;max-width:76ch}
+.report ul ul{margin-top:5px}
+.report .miss{color:var(--warn)}
+.report .tagm{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1px solid rgba(245,185,74,.45);color:var(--warn);border-radius:5px;padding:1px 6px;margin-right:6px}
+.steps{counter-reset:s;display:flex;flex-wrap:wrap;gap:8px 18px;padding:0;margin:0;list-style:none;font-size:13px;color:var(--muted)}
+.steps li{counter-increment:s}.steps li::before{content:counter(s);color:var(--accent);font-weight:800;margin-right:6px}
+dialog{background:var(--surface);color:var(--fg);border:1px solid var(--line-strong);border-radius:var(--r);padding:22px;width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(3,10,14,.72)}
+dialog .stack{gap:14px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:10px 16px;font-weight:600;font-size:14px;max-width:calc(100vw - 32px);z-index:50}
+#toast.err{border-color:var(--bad)}
+.thumb{max-height:54px;border-radius:6px;border:1px solid var(--line)}
+@media(prefers-reduced-motion:no-preference){.btn,.nav a,input,textarea,select{transition:border-color .12s,background .12s,color .12s}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>PERSONAL BOARD<br>OF DIRECTORS</b><span>Measure. Diagnose. Decide. Execute.</span></div>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <div class="savestate" id="savestate" role="status" aria-live="polite"></div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<dialog id="dlg"></dialog>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="/assets/jspdf.umd.min.js"></script>
+<script>
+"use strict";
+/* ================= Services (swap points for auth, cloud sync, AI APIs) =================
+   Storage is behind an async adapter: replace Services.storage with a cloud adapter exposing the same load/save.
+   Services.auth and Services.ai are intentionally empty; nothing in the app sends data anywhere. */
+const KEY='pbd.v1';
+const blankState=()=>({version:1,projects:[],reviews:[],reports:[],rcas:[],drafts:{}});
+const LocalAdapter={
+  async load(){const raw=localStorage.getItem(KEY);return raw?JSON.parse(raw):null},
+  async save(state){localStorage.setItem(KEY,JSON.stringify(state))},
+  async clear(){localStorage.removeItem(KEY)}
+};
+const Services={storage:LocalAdapter,auth:null,ai:null};
+const AI_TARGETS={chatgpt:{name:'ChatGPT',url:'https://chatgpt.com/'},claude:{name:'Claude',url:'https://claude.ai/'}};
+
+const AI_PROMPT=`Act as my independent Board of Directors, executive performance coach, strategic advisor, and critical-thinking partner.
+
+You are analyzing my performance report.
+
+Your job is not to motivate, flatter, or reassure me.
+Your job is to identify patterns, diagnose execution problems, challenge assumptions, and help me achieve measurable outcomes.
+
+Apply:
+- Ray Dalio's problem diagnosis.
+- Theory of Constraints.
+- After-Action Review principles.
+- Premortem analysis.
+- Opportunity-cost analysis.
+- Evidence-based decision-making.
+
+Analyze my report and return:
+
+1. EXECUTIVE VERDICT
+What actually happened during this period?
+
+2. TOP FIVE WINS
+What worked, and what made these results possible?
+
+3. TOP FIVE PERFORMANCE GAPS
+Where did I underperform compared with my commitments?
+
+4. ROOT CAUSE ANALYSIS
+Identify the most important underlying obstacles. Distinguish facts from hypotheses.
+
+5. HIDDEN PATTERNS
+Identify repeated behaviors, decision patterns, or contradictions supported by the evidence.
+
+6. THE NUMBER ONE BOTTLENECK
+Which single constraint should I address first, and why?
+
+7. OPPORTUNITY COST
+Where am I investing resources with insufficient returns?
+
+8. STOP / START / CONTINUE
+Give me direct, specific actions for each category.
+
+9. SEVEN-DAY ACTION PLAN
+Create a realistic plan with measurable deliverables, priorities, deadlines, and accountability.
+
+10. THREE UNCOMFORTABLE QUESTIONS
+Challenge my assumptions using three difficult but useful questions.
+
+Be direct, analytical, evidence-based, and specific.
+Never invent missing data. Clearly explain when there is insufficient evidence to draw a conclusion.
+Items marked [Missing] in the report were not recorded; treat them as unknown, not as zero.`;
+
+/* ================= State ================= */
+let S=blankState();
+const U={route:'dashboard',rep:{preset:'thisWeek',start:'',end:''},report:null,saved:{},tlFilter:'all',storageOk:true};
+const R={S:null,U};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const get=p=>p.split('.').reduce((o,k)=>o==null?o:o[k],R);
+const set=(p,v)=>{const ks=p.split('.');const last=ks.pop();const o=ks.reduce((o,k)=>(o[k]??=( {} )),R);o[last]=v};
+const fid=p=>'f-'+p.replace(/[^a-zA-Z0-9]/g,'-');
+const txt=v=>String(v??'').trim();
+
+/* dates */
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{const[y,m,d]=String(s).split('-').map(Number);return new Date(y,(m||1)-1,d||1)};
+const today=()=>iso(new Date());
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
+const monday=s=>addDays(s,-((parse(s).getDay()+6)%7));
+const monthEnd=ym=>{const d=parse(ym+'-01');return iso(new Date(d.getFullYear(),d.getMonth()+1,0))};
+const fmt=s=>s?parse(s).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'';
+const fmtS=s=>parse(s).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const fmtDT=t=>new Date(t).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
+function periodOf(type,date){
+  if(type==='daily')return[date,date];
+  if(type==='weekly'){const m=monday(date);return[m,addDays(m,6)]}
+  const ym=date.slice(0,7);return[ym+'-01',monthEnd(ym)];
+}
+function periodLabel(r){
+  if(r.type==='daily')return parse(r.periodStart).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  if(r.type==='weekly')return`Week of ${fmtS(r.periodStart)} – ${fmt(r.periodEnd)}`;
+  return parse(r.periodStart).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+}
+
+/* persistence */
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(flush,350)}
+async function flush(){
+  clearTimeout(saveT);
+  const el=$('#savestate');
+  try{await Services.storage.save(S);U.storageOk=true;el.className='savestate';el.textContent='Saved on this device · '+new Date().toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
+  catch(e){U.storageOk=false;el.className='savestate err';el.textContent='Not saved: browser storage is full or blocked. Export a backup from Data & privacy.'}
+}
+function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.className=kind||'';t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3600)}
+
+/* ================= Domain helpers ================= */
+const SCORES=[['execution','Execution'],['focus','Focus'],['learning','Learning'],['results','Measurable results'],['energy','Sustainable energy']];
+const CATS=['Internal','External','Strategic','Technical','Resource'];
+const PRIOS=['High','Medium','Low'];
+const STATUSES=['Not started','On track','At risk','Blocked','Paused','Done'];
+const stClass={'On track':'good','Done':'good','At risk':'warn','Blocked':'bad','Paused':'','Not started':''};
+const byType=t=>S.reviews.filter(r=>r.type===t).sort((a,b)=>a.periodStart.localeCompare(b.periodStart));
+const inRange=(s,e)=>S.reviews.filter(r=>r.periodEnd>=s&&r.periodStart<=e).sort((a,b)=>a.periodStart.localeCompare(b.periodStart)||a.type.localeCompare(b.type));
+function avgScore(r){const v=SCORES.map(([k])=>r.a.scores?.[k]).filter(x=>x>=1);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
+function stats(rs){
+  const o={dDone:0,dTotal:0,wDel:0,wPart:0,wMiss:0,wRated:0,wUnrated:0};
+  rs.forEach(r=>{
+    if(r.type==='daily')(r.a.priorities||[]).forEach(p=>{if(txt(p.t)){o.dTotal++;if(p.done)o.dDone++}});
+    if(r.type==='weekly')(r.a.commitments||[]).forEach(c=>{if(!txt(c.t))return;if(c.status==='delivered'){o.wDel++;o.wRated++}else if(c.status==='partial'){o.wPart++;o.wRated++}else if(c.status==='missed'){o.wMiss++;o.wRated++}else o.wUnrated++});
+  });
+  o.wRate=o.wRated?o.wDel/o.wRated:null;o.dRate=o.dTotal?o.dDone/o.dTotal:null;return o;
+}
+const pct=x=>x==null?'—':Math.round(x*100)+'%';
+const STOP=new Set('the a an to of and for in on my i with at is it that this was be by not did do too have had from but or as me am are were been get got'.split(' '));
+const toks=s=>new Set(String(s).toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(w=>w.length>2&&!STOP.has(w)));
+function sim(a,b){if(!a.size||!b.size)return 0;let n=0;a.forEach(x=>{if(b.has(x))n++});return n/(a.size+b.size-n)}
+function cluster(items){ // items: {t,...}; groups entries whose wording overlaps
+  const cs=[];
+  items.forEach(it=>{const tk=toks(it.t);const c=cs.find(c=>sim(c.tk,tk)>=.5||c.t.toLowerCase()===it.t.toLowerCase());if(c)c.items.push(it);else cs.push({t:it.t,tk,items:[it]})});
+  return cs.sort((a,b)=>b.items.length-a.items.length);
+}
+function obstacles(rs){
+  const out=[];
+  rs.forEach(r=>{
+    if(r.type==='weekly')(r.a.obstacles||[]).forEach(o=>{if(txt(o.t))out.push({t:txt(o.t),root:txt(o.root),cat:o.cat||'',recur:o.recur||'',r})});
+    if(r.type==='daily'&&txt(r.a.blocker))out.push({t:txt(r.a.blocker),root:'',cat:r.a.blockerCat||'',recur:'',r});
+  });
+  return out;
+}
+function missed(rs){
+  const out=[];
+  rs.forEach(r=>{
+    if(r.type==='daily')(r.a.priorities||[]).forEach(p=>{if(txt(p.t)&&!p.done)out.push({t:txt(p.t),kind:'Daily priority not completed',r})});
+    if(r.type==='weekly')(r.a.commitments||[]).forEach(c=>{if(txt(c.t)&&(c.status==='missed'||c.status==='partial'))out.push({t:txt(c.t),kind:c.status==='partial'?'Partially delivered':'Not delivered',r})});
+  });
+  return out;
+}
+function insight(){
+  const p=S.rcas.find(r=>r.primary&&r.status!=='resolved'&&txt(r.problem));
+  if(p){const w=[...p.whys].reverse().find(w=>txt(w.t));return{text:p.problem,detail:w?`Deepest cause recorded (${w.kind==='fact'?'verified fact':'hypothesis'}): ${w.t}`:'',next:p.intervention,src:'You marked this root cause analysis as the primary constraint'}}
+  const obs=obstacles(S.reviews);const cl=cluster(obs).find(c=>c.items.length>=2);
+  if(cl)return{text:cl.t,detail:`Recorded ${cl.items.length} times across your reviews.`,src:'Most frequently recorded obstacle'};
+  const w=byType('weekly').reverse().find(r=>(r.a.obstacles||[]).some(o=>txt(o.t)));
+  if(w){const o=w.a.obstacles.find(o=>txt(o.t));return{text:o.t,detail:txt(o.root)?'Root cause recorded: '+o.root:'',src:'Weekly review, '+periodLabel(w)}}
+  const d=byType('daily').reverse().find(r=>txt(r.a.blocker));
+  if(d)return{text:d.a.blocker,detail:'',src:'Daily review, '+periodLabel(d)};
+  const pr=activeProjects().find(p=>txt(p.bottleneck));
+  if(pr)return{text:pr.bottleneck,detail:'',src:'Main bottleneck of project “'+pr.name+'”'};
+  return null;
+}
+const prioRank=p=>({High:0,Medium:1,Low:2}[p.priority]??3);
+const activeProjects=()=>S.projects.filter(p=>p.status!=='Done').sort((a,b)=>prioRank(a)-prioRank(b)||String(a.deadline||'9').localeCompare(String(b.deadline||'9')));
+
+/* drafts */
+function newDraft(type){
+  const t=today();
+  if(type==='daily')return{type,date:t,a:{priorities:[{t:'',done:false},{t:'',done:false},{t:'',done:false}],completedNotes:'',win:'',blocker:'',blockerCat:'',avoided:'',learned:'',tomorrow:'',time:[],evidence:[]}};
+  if(type==='weekly'){
+    const prev=byType('weekly').filter(r=>r.periodStart<monday(t)).pop();
+    return{type,date:monday(t),a:{prev:{text:txt(prev?.a.outcome),result:''},commitments:[{t:'',status:'',evidence:''}],unfinished:'',evidence:'',well:'',bestReturn:'',strengths:'',obstacles:[{t:'',root:'',cat:'',recur:''}],bestDecisions:'',changeDecisions:'',infoAvailable:'',decisionLearned:'',wasted:'',stop:'',delegate:'',lessAttention:'',scores:{},scoreEvidence:{},outcome:'',actions:['','',''],criteria:'',deadline:'',expectedObstacles:'',ifPlan:'',thenPlan:''}};
+  }
+  return{type,date:t.slice(0,7),a:{quarterly:'',annual:'',currency:'USD',revenue:'',expenses:'',otherMetrics:'',profit:{},planned:'',completed:'',plannedNotes:'',recurring:'',decisions:'',projectDecisions:{},opportunities:''}};
+}
+function draft(type){if(!S.drafts[type])S.drafts[type]=newDraft(type);return S.drafts[type]}
+
+/* ================= UI primitives ================= */
+function ta(label,path,o={}){return`<div class="field"><label for="${fid(path)}">${label}</label>${o.hint?`<p class="hint">${o.hint}</p>`:''}<textarea id="${fid(path)}" data-bind="${path}" rows="${o.rows||3}" placeholder="${esc(o.ph||'')}">${esc(get(path))}</textarea></div>`}
+function inp(label,path,o={}){const c=`<input id="${fid(path)}" type="${o.type||'text'}" data-bind="${path}" value="${esc(get(path))}" placeholder="${esc(o.ph||'')}" ${o.attrs||''} ${o.bare?`aria-label="${esc(label)}"`:''}>`;return o.bare?c:`<div class="field"><label for="${fid(path)}">${label}</label>${o.hint?`<p class="hint">${o.hint}</p>`:''}${c}</div>`}
+function sel(label,path,opts,o={}){const v=get(path)??'';const c=`<select id="${fid(path)}" data-bind="${path}" ${o.rr?'data-rr="1"':''} ${o.bare?`aria-label="${esc(label)}"`:''}>${opts.map(x=>{const[val,lab]=Array.isArray(x)?x:[x,x];return`<option value="${esc(val)}" ${String(v)===String(val)?'selected':''}>${esc(lab)}</option>`}).join('')}</select>`;return o.bare?c:`<div class="field"><label for="${fid(path)}">${label}</label>${c}</div>`}
+const rmBtn=(path,i,label='Remove')=>`<button class="btn ghost sm danger" data-act="rm" data-path="${path}" data-i="${i}" aria-label="${label}">Remove</button>`;
+const addBtn=(path,tpl,label)=>`<button class="btn sm" data-act="add" data-path="${path}" data-tpl='${esc(JSON.stringify(tpl))}'>+ ${label}</button>`;
+const empty=(title,body,cta='')=>`<div class="empty"><b>${title}</b><span>${body}</span>${cta}</div>`;
+const pill=(t,c='')=>`<span class="pill ${c}">${esc(t)}</span>`;
+
+function lineChart(pts,{min=0,max,suffix='',label}){
+  const W=340,H=124,l=40,r=44,t=14,b=24,x=i=>l+(pts.length<2?0:(W-l-r)*i/(pts.length-1)),y=v=>t+(H-t-b)*(1-(v-min)/(max-min));
+  const fmtV=v=>(Math.round(v*10)/10)+suffix;const last=pts[pts.length-1];
+  return`<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}: ${pts.map(p=>p.l+' '+fmtV(p.v)).join(', ')}">
+  ${[min,(min+max)/2,max].map(g=>`<line x1="${l}" x2="${W-r}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)" stroke-width="1"/><text x="${l-6}" y="${y(g)+3}" text-anchor="end">${fmtV(g)}</text>`).join('')}
+  <polyline fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts.map((p,i)=>x(i)+','+y(p.v)).join(' ')}"/>
+  ${pts.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.v)}" r="${i===pts.length-1?4:2.5}" fill="var(--accent)"><title>${esc(p.l)}: ${fmtV(p.v)}</title></circle>`).join('')}
+  <text class="end" x="${x(pts.length-1)+8}" y="${y(last.v)+4}">${fmtV(last.v)}</text>
+  <text x="${l}" y="${H-6}">${esc(pts[0].l)}</text>${pts.length>1?`<text x="${W-r}" y="${H-6}" text-anchor="end">${esc(last.l)}</text>`:''}
+  </svg></div>`;
+}
+
+/* dialog */
+let dlgRes=null;
+function openDlg(html){const d=$('#dlg');d.innerHTML=html;if(!d.open)d.showModal()}
+function closeDlg(v){const d=$('#dlg');if(d.open)d.close();if(dlgRes){const r=dlgRes;dlgRes=null;r(v)}}
+function confirmBox(title,msg,ok='Confirm'){return new Promise(res=>{openDlg(`<div class="stack"><h2>${esc(title)}</h2><p class="muted">${esc(msg)}</p><div class="row end"><button class="btn ghost" data-dlg="0">Cancel</button><button class="btn danger" data-dlg="1">${esc(ok)}</button></div></div>`);dlgRes=res})}
+function manualCopy(text){openDlg(`<div class="stack"><h2>Copy manually</h2><p class="muted">This browser blocked automatic copying. The text is selected below: press Ctrl/Cmd + C.</p><textarea id="manual" rows="12" readonly>${esc(text)}</textarea><div class="row end"><button class="btn" data-dlg="0">Close</button></div></div>`);const m=$('#manual');m.focus();m.select()}
+async function copyText(text,ok){
+  try{await navigator.clipboard.writeText(text);toast(ok);return true}catch(e){}
+  try{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();const done=document.execCommand('copy');t.remove();if(done){toast(ok);return true}}catch(e){}
+  manualCopy(text);return false;
+}
+async function saveFile(filename,data,mime){
+  if(window.claude?.use){
+    const dl=await window.claude.use('downloads');
+    if(!dl){toast('Downloads are unavailable in this view. Use Copy instead.','err');return}
+    try{await dl.save({filename,data});toast('Saved '+filename)}
+    catch(e){toast(e?.code==='declined'?'Download cancelled.':'Download failed: '+(e?.message||e?.code||'unavailable'),e?.code==='declined'?'':'err')}
+    return;
+  }
+  const blob=data instanceof Blob?data:new Blob([data],{type:mime});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('Downloaded '+filename);
+}
+
+/* ================= Views ================= */
+const NAV=[['Overview'],['dashboard','Dashboard'],['projects','Projects'],['Reviews'],['daily','Daily review'],['weekly','Weekly board review'],['monthly','Monthly strategic review'],['Analysis'],['root-cause','Root cause analysis'],['reports','Executive reports'],['history','Performance history'],['System'],['data','Data & privacy']];
+const VIEWS={dashboard:vDashboard,projects:vProjects,daily:vDaily,weekly:vWeekly,monthly:vMonthly,'root-cause':vRca,reports:vReports,history:vHistory,data:vData};
+function render(){
+  const act=document.activeElement?.id;
+  $('#nav').innerHTML=NAV.map(n=>n.length===1?`<div class="grp">${n[0]}</div>`:`<a href="#${n[0]}" ${U.route===n[0]?'aria-current="page"':''}>${n[1]}</a>`).join('');
+  let html;try{html=VIEWS[U.route]()}catch(e){console.error(e);html=`<div class="empty"><b>This view could not be displayed.</b><span>${esc(e.message)}. Your data is untouched; export a backup from Data &amp; privacy and reload.</span></div>`}
+  $('#main').innerHTML=`<div class="wrap">${html}</div>`;
+  if(act)document.getElementById(act)?.focus({preventScroll:true});
+  refreshCalcs();
+}
+function route(){const h=location.hash.slice(1);U.route=VIEWS[h]?h:'dashboard';render();window.scrollTo(0,0)}
+const genBtn=(extra='')=>`<button class="btn primary big" data-act="genReport" ${extra}>Generate executive report</button>`;
+
+function projectCard(p,edit=true){
+  const overdue=p.deadline&&p.status!=='Done'&&p.deadline<today();
+  return`<article class="card proj"><div class="top"><div><h3>${esc(p.name)}</h3><p class="small muted">${esc(p.outcome)||'No measurable outcome defined'}</p></div><div class="row" style="flex-wrap:nowrap">${pill(p.priority,p.priority==='High'?'acc':'')}${pill(p.status,stClass[p.status])}</div></div>
+  <div><div class="row" style="justify-content:space-between"><span class="small muted">Actual progress</span><span class="small num">${p.progress||0}%</span></div><div class="bar" role="progressbar" aria-valuenow="${p.progress||0}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><i style="width:${p.progress||0}%"></i></div></div>
+  <dl class="kv"><dt>Deadline</dt><dd>${p.deadline?fmt(p.deadline)+(overdue?' '+pill('Overdue','bad'):''):'<span class="muted">Not set</span>'}</dd><dt>Bottleneck</dt><dd>${esc(p.bottleneck)||'<span class="muted">Not recorded</span>'}</dd><dt>Next action</dt><dd>${esc(p.nextAction)||'<span class="muted">Not recorded</span>'}</dd></dl>
+  ${edit?`<div class="row end"><button class="btn sm" data-act="editProject" data-id="${p.id}">Edit</button><button class="btn sm ghost danger" data-act="delProject" data-id="${p.id}">Delete</button></div>`:''}</article>`;
+}
+
+function vDashboard(){
+  const ws=monday(today()),we=addDays(ws,6),cur=inRange(ws,we),st=stats(cur);
+  const scored=byType('weekly').filter(r=>avgScore(r)!=null),latest=scored[scored.length-1],ins=insight();
+  const done=st.dDone+st.wDel,miss=(st.dTotal-st.dDone)+st.wMiss+st.wPart,has=st.dTotal+st.wRated>0;
+  const tile=(k,v,s)=>`<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+  const scoreTiles=[['execution','Execution'],['focus','Focus'],['energy','Energy'],['learning','Learning'],['results','Results']].map(([k,l])=>{const v=latest?.a.scores?.[k];return tile(l+' score',v?`${v}<small> / 5</small>`:'—',v?'Self-rated':'Not rated')}).join('');
+  const trend=scored.length>=2?lineChart(scored.slice(-12).map(r=>({l:fmtS(r.periodStart),v:avgScore(r)})),{min:1,max:5,label:'Average self-rated score by week'}):'';
+  const projs=activeProjects();
+  const dToday=byType('daily').some(r=>r.periodStart===today()),wNow=byType('weekly').some(r=>r.periodStart===ws),mNow=byType('monthly').some(r=>r.periodStart===today().slice(0,7)+'-01');
+  return`<div class="head"><div><span class="eyebrow">Current review period</span><h1>Week of ${fmtS(ws)} – ${fmt(we)}</h1><p class="muted">Measure your performance. Identify your bottlenecks. Make better decisions. Execute.</p></div>${genBtn('data-preset="thisWeek"')}</div>
+  <section class="insight" aria-label="Critical insight"><span class="eyebrow" style="color:var(--accent)">Critical insight · the constraint limiting progress</span>
+  ${ins?`<p class="big">${esc(ins.text)}</p>${ins.detail?`<p>${esc(ins.detail)}</p>`:''}${txt(ins.next)?`<p><b>Proposed intervention:</b> ${esc(ins.next)}</p>`:''}<p class="small muted">Source: ${esc(ins.src)}. <a href="#root-cause">Open root cause analysis</a></p>`
+  :`<p class="big">No obstacle recorded yet.</p><p class="muted">This fills in from your own reviews: record what stopped you in a daily or weekly review, or run a Five Whys analysis and mark it as the primary constraint.</p>`}</section>
+  <section class="section"><div class="sh"><h2>Performance overview</h2><span class="small muted">${cur.length?cur.length+' review'+(cur.length>1?'s':'')+' recorded this week':'No reviews recorded this week'}</span></div>
+  <div class="grid g-2">
+  ${tile('Completed goals',has?done:'—',has?`${st.dDone} daily priorities · ${st.wDel} weekly commitments`:'No evidence this week')}
+  ${tile('Missed commitments',has?miss:'—',has?`${st.dTotal-st.dDone} daily · ${st.wMiss+st.wPart} weekly (incl. partial)`:'No evidence this week')}
+  </div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(132px,1fr))">${scoreTiles}</div>
+  <p class="small muted">${latest?`Scores are your own 1–5 ratings from the weekly review of ${fmtS(latest.periodStart)} – ${fmt(latest.periodEnd)}. They are subjective unless you attached a concrete metric.`:'Scores appear after you complete the scorecard in a weekly board review.'}</p>
+  <div class="card"><div class="sh" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>Overall performance trend</h3><span class="small muted">Average of your five self-rated scores, per week</span></div>${trend||`<p class="muted" style="margin-top:10px">A trend needs at least two scored weekly reviews. You have ${scored.length}.</p>`}</div></section>
+  <section class="section"><div class="sh"><h2>Priority projects</h2><a class="btn sm" href="#projects">Manage projects</a></div>
+  ${projs.length?`<div class="grid g-2">${projs.slice(0,4).map(p=>projectCard(p,false)).join('')}</div>${projs.length>4?`<p class="small muted">${projs.length-4} more in Projects.</p>`:''}`:empty('No active projects.','Create a project with a measurable outcome and a deadline to see it here.','<button class="btn primary" data-act="newProject">Create project</button>')}</section>
+  <section class="section"><h2>Reviews</h2><div class="grid g-3">
+  ${[['daily','Daily review','5 minutes',dToday,'today'],['weekly','Weekly board review','30–45 minutes',wNow,'this week'],['monthly','Monthly strategic review','Strategy and finances',mNow,'this month']].map(([r,t,d,ok,w])=>`<a class="card" href="#${r}" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px"><div class="row" style="justify-content:space-between"><h3>${t}</h3>${ok?pill('Done '+w,'good'):pill('Open')}</div><span class="small muted">${d}</span></a>`).join('')}</div></section>`;
+}
+
+function vProjects(){
+  const ps=[...S.projects].sort((a,b)=>(a.status==='Done')-(b.status==='Done')||prioRank(a)-prioRank(b));
+  return`<div class="head"><div><h1>Projects</h1><p class="muted">Each project needs a measurable outcome, a deadline, and one named bottleneck.</p></div><button class="btn primary" data-act="newProject">New project</button></div>
+  ${ps.length?`<div class="grid g-2">${ps.map(p=>projectCard(p)).join('')}</div>`:empty('No projects yet.','A project is a goal with a measurable outcome and a deadline. Reviews and reports reference them.','<button class="btn primary" data-act="newProject">Create your first project</button>')}`;
+}
+function projectDlg(){
+  openDlg(`<form class="stack" id="projForm" method="dialog"><h2>${U.proj.id?'Edit project':'New project'}</h2>
+  ${inp('Project name','U.proj.name',{attrs:'required',ph:'Launch the paid newsletter'})}
+  ${ta('Desired measurable outcome','U.proj.outcome',{rows:2,ph:'200 paying subscribers at $12/month'})}
+  <div class="grid g-3">${inp('Deadline','U.proj.deadline',{type:'date'})}${sel('Priority','U.proj.priority',PRIOS)}${sel('Current status','U.proj.status',STATUSES)}</div>
+  <div class="field"><label for="${fid('U.proj.progress')}">Actual progress: <span data-calc="projprog" class="num"></span></label><input id="${fid('U.proj.progress')}" type="range" min="0" max="100" step="5" data-bind="U.proj.progress" value="${U.proj.progress||0}"></div>
+  ${ta('Main bottleneck','U.proj.bottleneck',{rows:2,hint:'The single constraint that limits this project most.'})}
+  ${ta('Next critical action','U.proj.nextAction',{rows:2})}
+  <div class="row end"><button type="button" class="btn ghost" data-dlg="0">Cancel</button><button class="btn primary" data-act="saveProject">Save project</button></div></form>`);
+  refreshCalcs();
+}
+
+function reviewHead(type,title,sub){
+  const d=draft(type),[ps]=periodOf(type,d.date),dupe=S.reviews.find(r=>r.type===type&&r.periodStart===ps&&r.id!==d.id),sv=U.saved[type]&&S.reviews.find(r=>r.id===U.saved[type]);
+  return`<div class="head"><div><h1>${title}</h1><p class="muted">${sub}</p></div><div class="field" style="width:190px"><label for="${fid('S.drafts.'+type+'.date')}">${type==='daily'?'Date':type==='weekly'?'Any day in the week':'Month'}</label><input id="${fid('S.drafts.'+type+'.date')}" type="${type==='monthly'?'month':'date'}" data-bind="S.drafts.${type}.date" data-rr="1" value="${esc(d.date)}"></div></div>
+  ${sv?`<div class="banner"><span><b>Review saved.</b> ${esc(periodLabel(sv))}</span><span class="row"><button class="btn primary sm" data-act="reportFor" data-id="${sv.id}">Generate executive report</button><a class="btn sm" href="#history">View history</a></span></div>`:''}
+  ${d.id?`<div class="banner warn"><span>You are editing the saved review for <b>${esc(periodLabel({type,periodStart:ps,periodEnd:periodOf(type,d.date)[1]}))}</b>.</span><button class="btn sm" data-act="discard" data-type="${type}">Stop editing</button></div>`:''}
+  ${dupe?`<div class="banner warn"><span>A ${type} review already exists for this period.</span><button class="btn sm" data-act="editReview" data-id="${dupe.id}">Open it instead</button></div>`:''}`;
+}
+const reviewFoot=type=>`<div class="rsec"><div class="row" style="justify-content:space-between"><span class="small muted">Drafts save automatically on this device as you type.</span><span class="row"><button class="btn ghost danger" data-act="discard" data-type="${type}">Clear draft</button><button class="btn primary" data-act="saveReview" data-type="${type}">${draft(type).id?'Save changes':'Complete review'}</button></span></div></div>`;
+const rsec=(n,title,body,note='')=>`<section class="rsec"><header>${n?`<span class="n">${n}</span>`:''}<h2>${title}</h2></header>${note?`<p class="note">${note}</p>`:''}${body}</section>`;
+
+function vDaily(){
+  const d=draft('daily'),P='S.drafts.daily.a';
+  return reviewHead('daily','Daily review','Five minutes. Seven questions. Answer with facts, not intentions.')+
+  rsec('1','What were my three most important priorities today?',`<div class="stack" style="gap:8px">${d.a.priorities.map((p,i)=>`<div class="line c-pri"><input type="checkbox" id="${fid(P+'.priorities.'+i+'.done')}" data-bind="${P}.priorities.${i}.done" ${p.done?'checked':''} aria-label="Priority ${i+1} completed">${inp('Priority '+(i+1),`${P}.priorities.${i}.t`,{bare:1,ph:'Priority '+(i+1)})}</div>`).join('')}</div><p class="hint">Tick each priority you actually completed. Unticked priorities count as missed.</p>`)+
+  rsec('2','What did I actually complete?',ta('Anything completed beyond the three priorities, with specifics',P+'.completedNotes'))+
+  rsec('3','What was my biggest win?',ta('Biggest win',P+'.win',{rows:2}))+
+  rsec('4','What prevented better performance?',`<div class="line c-obs multi">${ta('The obstacle',P+'.blocker',{rows:2})}${sel('Type of obstacle',P+'.blockerCat',[['','Not classified'],...CATS])}</div>`)+
+  rsec('5','What did I avoid or procrastinate on?',ta('Avoided or postponed',P+'.avoided',{rows:2}))+
+  rsec('6','What did I learn?',ta('Lesson',P+'.learned',{rows:2}))+
+  rsec('7','What is tomorrow’s most important action?',inp('One action, concrete enough to start without thinking',P+'.tomorrow'))+
+  rsec('','Time tracking <span class="muted small">(optional)</span>',`<div class="stack" style="gap:8px">${d.a.time.map((t,i)=>`<div class="line c-time multi">${inp('Activity',`${P}.time.${i}.activity`,{bare:1,ph:'Activity'})}${inp('Minutes',`${P}.time.${i}.min`,{bare:1,type:'number',ph:'Min',attrs:'min="0" inputmode="numeric"'})}${sel('Kind',`${P}.time.${i}.kind`,[['deep','Deep work'],['shallow','Shallow work'],['admin','Admin / meetings']],{bare:1})}${rmBtn(P+'.time',i)}</div>`).join('')}</div><div class="row">${addBtn(P+'.time',{activity:'',min:'',kind:'deep'},'Add time entry')}<span class="small muted" data-calc="timeTotal"></span></div>`)+
+  rsec('','Evidence <span class="muted small">(optional)</span>',`<div class="stack" style="gap:8px">${d.a.evidence.map((e,i)=>`<div class="line c-ev multi">${inp('What this proves',`${P}.evidence.${i}.label`,{bare:1,ph:'What this proves'})}${e.file?`<span class="row small">${e.file.data.startsWith('data:image')?`<img class="thumb" src="${e.file.data}" alt="">`:''}<span class="muted">${esc(e.file.name)} · ${Math.round(e.file.size/1024)} KB</span></span>`:inp('Link',`${P}.evidence.${i}.link`,{bare:1,type:'url',ph:'https://…'})}${rmBtn(P+'.evidence',i)}</div>`).join('')}</div><div class="row">${addBtn(P+'.evidence',{label:'',link:''},'Add link or note')}<label class="btn sm" tabindex="0">Attach file<input type="file" data-file="evidence" hidden></label><span class="small muted">Files stay in this browser. Max 300 KB each.</span></div>`)+
+  reviewFoot('daily');
+}
+
+function vWeekly(){
+  const d=draft('weekly'),a=d.a,P='S.drafts.weekly.a';
+  const prevW=byType('weekly').filter(r=>r.periodStart<monday(d.date)).pop();
+  return reviewHead('weekly','Weekly board review','30–45 minutes. Report to yourself the way you would report to a board: commitments, evidence, causes, decisions.')+
+  rsec('01','Execution',
+    (txt(a.prev?.text)?`<div class="block"><span class="eyebrow">Last week’s primary outcome</span><p>${esc(a.prev.text)}</p>${sel('Did I achieve it?',P+'.prev.result',[['','Not rated'],['achieved','Achieved'],['partial','Partly achieved'],['missed','Not achieved']])}</div>`:'')+
+    `<div class="field"><span class="flabel">What did I promise, and what did I deliver?</span><p class="hint">One line per commitment. Rate each one and name the evidence that proves it.</p></div>
+    <div class="stack" style="gap:8px">${a.commitments.map((c,i)=>`<div class="line c-com multi">${inp('Commitment '+(i+1),`${P}.commitments.${i}.t`,{bare:1,ph:'What I promised'})}${sel('Status',`${P}.commitments.${i}.status`,[['','Not rated'],['delivered','Delivered'],['partial','Partially'],['missed','Not delivered']],{bare:1})}${inp('Evidence',`${P}.commitments.${i}.evidence`,{bare:1,ph:'Evidence (link, number, artifact)'})}${rmBtn(P+'.commitments',i)}</div>`).join('')}</div>
+    <div class="row">${addBtn(P+'.commitments',{t:'',status:'',evidence:''},'Add commitment')}${prevW&&(prevW.a.actions||[]).some(txt)?`<button class="btn sm ghost" data-act="importActions">Import last week’s planned actions</button>`:''}</div>`+
+    ta('What remains unfinished?',P+'.unfinished')+ta('What evidence proves the outcomes?',P+'.evidence',{hint:'Numbers, shipped artifacts, signed deals, published links. “I worked hard” is not evidence.'}))+
+  rsec('02','Excellence',ta('What did I do exceptionally well?',P+'.well')+ta('What created the greatest return?',P+'.bestReturn')+ta('Which strengths should I repeat?',P+'.strengths'))+
+  rsec('03','Bottlenecks',`<div class="stack">${a.obstacles.map((o,i)=>`<div class="block"><div class="line c-obs">${ta('What stopped me?',`${P}.obstacles.${i}.t`,{rows:2})}${ta('What was the root cause?',`${P}.obstacles.${i}.root`,{rows:2})}</div><div class="line c-obs">${sel('Type',`${P}.obstacles.${i}.cat`,[['','Not classified'],...CATS])}${sel('Has this obstacle occurred before?',`${P}.obstacles.${i}.recur`,[['','Not answered'],['yes','Yes'],['no','No'],['unsure','Unsure']])}</div><div class="row end"><button class="btn sm" data-act="rcaFrom" data-i="${i}">Run Five Whys</button>${rmBtn(P+'.obstacles',i)}</div></div>`).join('')}</div><div class="row">${addBtn(P+'.obstacles',{t:'',root:'',cat:'',recur:''},'Add obstacle')}</div>`)+
+  rsec('04','Decision audit',ta('What were my best decisions?',P+'.bestDecisions')+ta('Which decisions would I change?',P+'.changeDecisions')+ta('What information was available when I made them?',P+'.infoAvailable',{hint:'Judge the decision by what you knew then, not by the result.'})+ta('What did I learn?',P+'.decisionLearned'))+
+  rsec('05','Opportunity cost',ta('Where did I waste time?',P+'.wasted')+ta('What should I stop doing?',P+'.stop')+ta('What should I automate or delegate?',P+'.delegate')+ta('Which project should receive less attention?',P+'.lessAttention'))+
+  rsec('06','Performance scorecard',`<div class="stack">${SCORES.map(([k,l])=>`<div class="scorerow"><span class="flabel" id="lab-${k}">${l}</span><div class="rate" role="radiogroup" aria-labelledby="lab-${k}">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="sc-${k}" id="sc-${k}-${n}" value="${n}" data-bind="${P}.scores.${k}" ${a.scores[k]===n?'checked':''}><span>${n}</span></label>`).join('')}</div>${inp('Supporting metric for '+l,`${P}.scoreEvidence.${k}`,{bare:1,ph:'Concrete metric that supports this rating (optional)'})}</div>`).join('')}</div>`,'These scores are subjective. They become evidence only when you attach a concrete metric, such as hours of deep work, revenue, or shipped deliverables. 1 = far below standard, 5 = exceptional.')+
+  rsec('07','Next week’s strategy',inp('One primary outcome',P+'.outcome',{ph:'The single result that makes the week a success'})+
+    `<div class="field"><span class="flabel">Three supporting actions</span>${[0,1,2].map(i=>inp('Supporting action '+(i+1),`${P}.actions.${i}`,{bare:1,ph:'Action '+(i+1)})).join('')}</div>`+
+    `<div class="line c-obs">${ta('Measurable success criteria',P+'.criteria',{rows:2})}${inp('Deadline',P+'.deadline',{type:'date'})}</div>`+
+    ta('Expected obstacles',P+'.expectedObstacles',{rows:2,hint:'Premortem: imagine the week failed. What caused it?'})+
+    `<div class="line c-obs">${ta('If… (the obstacle appears)',P+'.ifPlan',{rows:2})}${ta('Then… (I will respond by)',P+'.thenPlan',{rows:2})}</div>`)+
+  reviewFoot('weekly');
+}
+
+function vMonthly(){
+  const d=draft('monthly'),a=d.a,P='S.drafts.monthly.a',[ms,me]=periodOf('monthly',d.date);
+  const st=stats(inRange(ms,me)),cl=cluster(obstacles(inRange(ms,me))).filter(c=>c.items.length>=2);
+  const ps=S.projects;
+  return reviewHead('monthly','Monthly strategic review','Step back from execution. Check direction, money, and where your attention should go next.')+
+  rsec('','Progress toward goals',ta('Progress toward quarterly goals',P+'.quarterly')+ta('Progress toward annual goals',P+'.annual'))+
+  rsec('','Revenue and financial metrics',`<div class="grid g-3">${inp('Currency',P+'.currency',{ph:'USD'})}${inp('Revenue',P+'.revenue',{type:'number',attrs:'step="any" inputmode="decimal"'})}${inp('Expenses',P+'.expenses',{type:'number',attrs:'step="any" inputmode="decimal"'})}</div><p class="small">Net result: <b class="num" data-calc="mnet"></b></p>`+ta('Other financial or business metrics',P+'.otherMetrics',{rows:2,ph:'MRR, pipeline, cash runway, audience growth…'}),'Enter only figures you can verify. Blank fields are reported as missing, never as zero.')+
+  rsec('','Project profitability',ps.length?`<div class="stack" style="gap:8px"><div class="line c-pp small muted" aria-hidden="true"><span>Project</span><span>Revenue</span><span>Cost</span><span>Profit</span></div>${ps.map(p=>`<div class="line c-pp multi"><span style="overflow-wrap:anywhere">${esc(p.name)}</span>${inp('Revenue for '+p.name,`${P}.profit.${p.id}.revenue`,{bare:1,type:'number',ph:'Revenue',attrs:'step="any"'})}${inp('Cost for '+p.name,`${P}.profit.${p.id}.cost`,{bare:1,type:'number',ph:'Cost',attrs:'step="any"'})}<b class="num" data-calc="pp:${p.id}"></b></div>`).join('')}</div>`:empty('No projects to evaluate.','Create projects first to record their revenue and cost.','<a class="btn sm" href="#projects">Go to projects</a>'))+
+  rsec('','Completed versus planned work',`<div class="grid g-3">${inp('Items planned',P+'.planned',{type:'number',attrs:'min="0"'})}${inp('Items completed',P+'.completed',{type:'number',attrs:'min="0"'})}<div class="field"><span class="flabel">Completion</span><b class="num" style="padding:9px 0" data-calc="mrate"></b></div></div><p class="note">From your saved reviews this month: ${st.wRated?`${st.wDel} of ${st.wRated} weekly commitments delivered`:'no rated weekly commitments'}; ${st.dTotal?`${st.dDone} of ${st.dTotal} daily priorities completed`:'no daily priorities recorded'}.</p>`+ta('Notes on the gap',P+'.plannedNotes',{rows:2}))+
+  rsec('','Recurring bottlenecks',(cl.length?`<p class="note">Detected in this month’s reviews: ${cl.map(c=>`“${esc(c.t)}” (${c.items.length}×)`).join('; ')}.</p>`:`<p class="note">No repeated obstacle wording detected in this month’s saved reviews.</p>`)+ta('Which bottlenecks keep returning, and what will change?',P+'.recurring'))+
+  rsec('','Strategic decisions',ta('Decisions made or needed this month',P+'.decisions'))+
+  rsec('','Projects to continue, pause, or eliminate',ps.length?`<div class="stack" style="gap:8px">${ps.map(p=>`<div class="line c-pd multi"><span style="overflow-wrap:anywhere">${esc(p.name)}</span>${sel('Decision for '+p.name,`${P}.projectDecisions.${p.id}.d`,[['','Undecided'],['continue','Continue'],['pause','Pause'],['eliminate','Eliminate']],{bare:1})}${inp('Reason for '+p.name,`${P}.projectDecisions.${p.id}.why`,{bare:1,ph:'Reason'})}</div>`).join('')}</div>`:empty('No projects yet.','Create projects to decide which to continue, pause, or eliminate.'))+
+  rsec('','Biggest opportunities for next month',ta('Opportunities',P+'.opportunities'))+
+  reviewFoot('monthly');
+}
+
+function vRca(){
+  const list=[...S.rcas].sort((a,b)=>b.updatedAt-a.updatedAt);
+  return`<div class="head"><div><h1>Root cause analysis</h1><p class="muted">Five Whys. Keep asking why until you reach a cause you can act on. Mark each answer as a verified fact or a hypothesis.</p></div><button class="btn primary" data-act="newRca">New analysis</button></div>
+  ${list.length?list.map(r=>{const i=S.rcas.indexOf(r),P=`S.rcas.${i}`;const shown=Math.min(5,r.whys.findIndex(w=>!txt(w.t))===-1?5:r.whys.findIndex(w=>!txt(w.t))+1);const hyp=r.whys.filter(w=>txt(w.t)&&w.kind!=='fact').length;
+    return`<article class="card stack"><div class="row" style="justify-content:space-between"><span class="row">${r.primary?pill('Primary constraint','acc'):''}${pill(r.status==='resolved'?'Resolved':'Open',r.status==='resolved'?'good':'warn')}${hyp?pill(hyp+' unverified','') :''}</span><span class="small muted">Updated ${fmtDT(r.updatedAt)}</span></div>
+    ${ta('Problem',P+'.problem',{rows:2,ph:'I did not launch my product.'})}
+    ${r.whys.slice(0,shown).map((w,k)=>`<div class="why"><span class="lab">Why ${k+1}</span>${ta('Why '+(k+1),`${P}.whys.${k}.t`,{rows:2,ph:k===0?'Because…':'Why did that happen?'}).replace('<label','<label hidden')}${sel('Why '+(k+1)+' is a',`${P}.whys.${k}.kind`,[['hypothesis','Hypothesis'],['fact','Verified fact']],{bare:1,rr:1})}</div>`).join('')}
+    ${shown<5?`<p class="hint">Answer Why ${shown} to reveal the next question. You can stop early once the cause is actionable.</p>`:''}
+    ${ta('Proposed intervention',P+'.intervention',{rows:2,ph:'Validate the minimum offer with real customers before expanding features.'})}
+    <div class="row end"><button class="btn sm" data-act="rcaPrimary" data-id="${r.id}">${r.primary?'Unmark primary':'Mark as primary constraint'}</button><button class="btn sm" data-act="rcaStatus" data-id="${r.id}">${r.status==='resolved'?'Reopen':'Mark resolved'}</button><button class="btn sm ghost danger" data-act="delRca" data-id="${r.id}">Delete</button></div></article>`}).join('')
+  :empty('No analyses yet.','Start from any obstacle. Example: “I did not launch my product” → “I kept changing the features” → … → “I had not validated the offer with customers.”','<button class="btn primary" data-act="newRca">Start a Five Whys</button>')}`;
+}
+
+function vReports(){
+  const r=U.report,rep=U.rep;if(!rep.start)applyPreset('thisWeek');
+  const saved=[...S.reports].sort((a,b)=>b.periodEnd.localeCompare(a.periodEnd)||b.createdAt-a.createdAt);
+  return`<div class="head"><div><h1>Executive reports</h1><p class="muted">Built only from what you entered. Anything you did not record is labelled missing.</p></div></div>
+  <section class="card stack"><div class="grid g-3">${sel('Period','U.rep.preset',[['thisWeek','This week'],['lastWeek','Last week'],['thisMonth','This month'],['lastMonth','Last month'],['custom','Custom range']],{rr:1})}${inp('From','U.rep.start',{type:'date'})}${inp('To','U.rep.end',{type:'date'})}</div><div class="row">${genBtn()}</div></section>
+  ${r?`<section class="section"><div class="sh"><h2>${esc(r.title)}</h2><span class="small muted">${r.saved?'Saved':'Not saved yet'} · generated ${fmtDT(r.createdAt)}</span></div>
+  ${r.reviewCount?'':`<div class="banner warn"><span>No saved reviews fall inside this period, so most sections are marked missing.</span></div>`}
+  <div class="row"><button class="btn" data-act="copyReport">Copy report</button><button class="btn" data-act="dlPdf">Download PDF</button><button class="btn" data-act="dlMd">Download Markdown</button><button class="btn" data-act="dlJson">Download JSON</button><button class="btn primary" data-act="saveReport" ${r.saved?'disabled':''}>${r.saved?'Report saved':'Save report'}</button></div>
+  <div class="insight"><span class="eyebrow" style="color:var(--accent)">Analyze with AI</span>
+  <p>Copy this report together with a board-level analysis prompt, then paste it into the assistant you prefer. Nothing is sent anywhere until you paste it yourself.</p>
+  <div class="row"><button class="btn primary" data-act="copyAI">Copy report + AI analysis prompt</button><a class="btn" href="${AI_TARGETS.chatgpt.url}" target="_blank" rel="noopener">Open ChatGPT</a><a class="btn" href="${AI_TARGETS.claude.url}" target="_blank" rel="noopener">Open Claude</a></div>
+  <div class="row"><a class="btn" href="${AI_TARGETS.chatgpt.url}" target="_blank" rel="noopener" data-act="copyAI" data-open="chatgpt">Copy &amp; open ChatGPT</a><a class="btn" href="${AI_TARGETS.claude.url}" target="_blank" rel="noopener" data-act="copyAI" data-open="claude">Copy &amp; open Claude</a><button class="btn ghost sm" data-act="showPrompt">View the analysis prompt</button></div>
+  <ol class="steps"><li>Copy for AI analysis</li><li>Open ChatGPT or Claude</li><li>Paste</li><li>Read the verdict</li></ol></div>
+  <article class="report" id="reportBody">${mdToHtml(r.markdown)}</article></section>`
+  :empty('No report open.','Choose a period and generate a report, or open a saved one below.')}
+  <section class="section"><h2>Saved reports</h2>${saved.length?`<div class="tl">${saved.map(s=>`<div class="it"><span class="small muted num">${fmtS(s.periodEnd)}</span><div style="min-width:0"><b>${esc(s.title)}</b><p class="small muted">Generated ${fmtDT(s.createdAt)}</p></div><span class="row"><button class="btn sm" data-act="openReport" data-id="${s.id}">Open</button><button class="btn sm ghost danger" data-act="delReport" data-id="${s.id}">Delete</button></span></div>`).join('')}</div>`:empty('No saved reports.','Generate a report and choose Save report to keep it here, ordered by period.')}</section>`;
+}
+
+function vHistory(){
+  const W=byType('weekly'),all=[...S.reviews].sort((a,b)=>b.periodStart.localeCompare(a.periodStart)||b.createdAt-a.createdAt);
+  if(!all.length)return`<div class="head"><div><h1>Performance history</h1><p class="muted">Trends, comparisons, and recurring patterns from your saved reviews.</p></div></div>${empty('No saved reviews yet.','History is drawn only from reviews you complete. Nothing is estimated.','<a class="btn primary" href="#daily">Start a daily review</a>')}`;
+  const st=stats(S.reviews),rateW=W.filter(r=>stats([r]).wRated),scored=W.filter(r=>avgScore(r)!=null);
+  const outcomes=W.filter(r=>txt(r.a.prev?.text)&&r.a.prev.result),ach=outcomes.filter(r=>r.a.prev.result==='achieved').length,doneP=S.projects.filter(p=>p.status==='Done').length;
+  const tile=(k,v,s)=>`<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+  const chartCard=(title,rs,f,o)=>`<div class="card"><h3>${title}</h3>${rs.length>=2?lineChart(rs.slice(-12).map(r=>({l:fmtS(r.periodStart),v:f(r)})),{...o,label:title}):`<p class="small muted" style="margin-top:8px">Needs two weekly reviews with this data. You have ${rs.length}.</p>`}</div>`;
+  // comparison
+  if(!W.find(r=>r.id===U.cmpA))U.cmpA=W[W.length-2]?.id;if(!W.find(r=>r.id===U.cmpB))U.cmpB=W[W.length-1]?.id;
+  const A=W.find(r=>r.id===U.cmpA),B=W.find(r=>r.id===U.cmpB),wopts=W.map(r=>[r.id,periodLabel(r)]);
+  const cmpRow=(l,fa,num=true)=>{const a=fa(A),b=fa(B);const dl=num&&a!=null&&b!=null?b-a:null;return`<tr><td>${l}</td><td class="num">${a??'—'}</td><td class="num">${b??'—'}</td><td class="num" style="color:${dl>0?'var(--good)':dl<0?'var(--bad)':'var(--muted)'}">${dl==null?'':(dl>0?'+':'')+Math.round(dl*10)/10}</td></tr>`};
+  const rateN=r=>{const s=stats([r]);return s.wRate==null?null:Math.round(s.wRate*100)};
+  const obs=obstacles(S.reviews),ocl=cluster(obs).filter(c=>c.items.length>=2),flagged=obs.filter(o=>o.recur==='yes');
+  const cats=CATS.map(c=>[c,obs.filter(o=>o.cat===c).length]).filter(x=>x[1]),cmax=Math.max(1,...cats.map(c=>c[1]));
+  const mcl=cluster(missed(S.reviews)).filter(c=>c.items.length>=2);
+  const resLab={achieved:['Achieved','good'],partial:['Partly','warn'],missed:['Not achieved','bad']};
+  const tl=all.filter(r=>U.tlFilter==='all'||r.type===U.tlFilter);
+  const snippet=r=>r.type==='daily'?(txt(r.a.win)||(r.a.priorities||[]).map(p=>p.t).filter(txt).join(' · ')):r.type==='weekly'?(txt(r.a.outcome)?'Next outcome: '+r.a.outcome:(r.a.commitments||[]).map(c=>c.t).filter(txt).join(' · ')):(txt(r.a.opportunities)||txt(r.a.quarterly));
+  return`<div class="head"><div><h1>Performance history</h1><p class="muted">Every chart and count below comes from your saved reviews.</p></div></div>
+  <div class="grid g-tiles">${tile('Reviews saved',all.length,`${byType('daily').length} daily · ${W.length} weekly · ${byType('monthly').length} monthly`)}${tile('Commitment completion',pct(st.wRate),st.wRated?`${st.wDel} of ${st.wRated} weekly commitments`:'No rated commitments')}${tile('Daily priority completion',pct(st.dRate),st.dTotal?`${st.dDone} of ${st.dTotal} priorities`:'No daily priorities')}${tile('Goals achieved',outcomes.length||doneP?ach+doneP:'—',`${ach} of ${outcomes.length} weekly outcomes · ${doneP} projects done`)}</div>
+  <section class="section"><h2>Performance trends</h2><div class="grid g-2">${chartCard('Weekly commitment completion',rateW,rateN,{min:0,max:100,suffix:'%'})}${chartCard('Average self-rated score',scored,avgScore,{min:1,max:5})}</div>
+  <div class="grid g-3">${SCORES.map(([k,l])=>chartCard(l,W.filter(r=>r.a.scores?.[k]),r=>r.a.scores[k],{min:1,max:5})).join('')}</div></section>
+  <section class="section"><h2>Comparison between weeks</h2>${W.length>=2?`<div class="grid g-2">${sel('Week A','U.cmpA',wopts,{rr:1})}${sel('Week B','U.cmpB',wopts,{rr:1})}</div><div class="card scroll"><table><thead><tr><th>Measure</th><th class="num">Week A</th><th class="num">Week B</th><th class="num">Change</th></tr></thead><tbody>
+  ${cmpRow('Commitments delivered (%)',rateN)}${SCORES.map(([k,l])=>cmpRow(l+' (1–5)',r=>r.a.scores?.[k]??null)).join('')}${cmpRow('Average score',r=>{const v=avgScore(r);return v==null?null:Math.round(v*10)/10})}${cmpRow('Obstacles recorded',r=>(r.a.obstacles||[]).filter(o=>txt(o.t)).length)}
+  </tbody></table></div>`:empty('Comparison needs two weekly reviews.',`You have ${W.length}.`)}</section>
+  <section class="section"><h2>Recurring obstacles</h2><div class="grid g-2"><div class="card stack"><h3>Repeated in your own words</h3>${ocl.length?`<table><tbody>${ocl.map(c=>`<tr><td>${esc(c.t)}<div class="small muted">${c.items.map(i=>fmtS(i.r.periodStart)).join(', ')}</div></td><td class="num">${c.items.length}×</td></tr>`).join('')}</tbody></table>`:'<p class="small muted">No obstacle has been recorded twice with similar wording.</p>'}
+  ${flagged.length?`<h3>You said these had happened before</h3><ul style="margin:0;padding-left:18px">${flagged.map(o=>`<li>${esc(o.t)} <span class="small muted">(${fmtS(o.r.periodStart)})</span></li>`).join('')}</ul>`:''}</div>
+  <div class="card stack"><h3>Obstacles by type</h3>${cats.length?cats.map(([c,n])=>`<div><div class="row" style="justify-content:space-between"><span class="small">${c}</span><span class="small num">${n}</span></div><div class="bar"><i style="width:${n/cmax*100}%"></i></div></div>`).join(''):'<p class="small muted">No classified obstacles yet.</p>'}</div></div></section>
+  <section class="section"><h2>Repeated missed commitments</h2>${mcl.length?`<div class="card scroll"><table><thead><tr><th>Commitment</th><th>When</th><th class="num">Missed</th></tr></thead><tbody>${mcl.map(c=>`<tr><td>${esc(c.t)}</td><td class="small muted">${c.items.map(i=>fmtS(i.r.periodStart)).join(', ')}</td><td class="num">${c.items.length}×</td></tr>`).join('')}</tbody></table></div>`:empty('No commitment has been missed twice.','Repeats show up here when a similar priority or commitment is left undone in more than one review.')}</section>
+  <section class="section"><h2>Progress toward primary goals</h2><div class="grid g-2"><div class="card stack"><h3>Weekly primary outcomes</h3>${outcomes.length?`<table><tbody>${outcomes.map(r=>`<tr><td>${esc(r.a.prev.text)}<div class="small muted">Rated in ${esc(periodLabel(r))}</div></td><td>${pill(...resLab[r.a.prev.result])}</td></tr>`).join('')}</tbody></table>`:'<p class="small muted">Set a primary outcome in one weekly review and rate it in the next.</p>'}</div>
+  <div class="card stack"><h3>Projects</h3>${S.projects.length?S.projects.map(p=>`<div><div class="row" style="justify-content:space-between"><span class="small">${esc(p.name)}</span><span class="small num">${p.progress||0}%</span></div><div class="bar"><i style="width:${p.progress||0}%"></i></div></div>`).join(''):'<p class="small muted">No projects yet.</p>'}</div></div></section>
+  <section class="section"><div class="sh"><h2>Timeline of reviews</h2>${sel('Show','U.tlFilter',[['all','All reviews'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly']],{bare:1,rr:1}).replace('<select','<select style="width:auto"')}</div>
+  <div class="tl">${tl.map(r=>`<div class="it"><span>${pill(r.type[0].toUpperCase()+r.type.slice(1),r.type==='weekly'?'acc':'')}</span><div style="min-width:0"><b>${esc(periodLabel(r))}</b><p class="small muted">${esc(snippet(r))||'No summary text'}</p></div><span class="row"><button class="btn sm" data-act="editReview" data-id="${r.id}">Open</button><button class="btn sm" data-act="reportFor" data-id="${r.id}">Report</button><button class="btn sm ghost danger" data-act="delReview" data-id="${r.id}">Delete</button></span></div>`).join('')||'<p class="muted">No reviews of this type.</p>'}</div></section>`;
+}
+
+function vData(){
+  let size=0;try{size=(localStorage.getItem(KEY)||'').length}catch(e){}
+  return`<div class="head"><div><h1>Data &amp; privacy</h1><p class="muted">Your reviews live in this browser only. No account, no server, no automatic sharing.</p></div></div>
+  ${U.storageOk?'':`<div class="banner warn"><span><b>Browser storage is unavailable.</b> Entries will be lost when you close this page. Export a backup before leaving.</span></div>`}
+  <section class="card stack"><h2>Backup</h2><p class="muted">Browser storage can be cleared by the browser, by private windows, or by switching devices. Export a backup file regularly and import it wherever you continue.</p>
+  <div class="row"><button class="btn primary" data-act="exportAll">Export backup (JSON)</button><label class="btn" tabindex="0">Import backup<input type="file" accept="application/json,.json" data-file="import" hidden></label></div>
+  <p class="small muted num">${S.projects.length} projects · ${S.reviews.length} reviews · ${S.reports.length} reports · ${S.rcas.length} analyses · about ${Math.max(1,Math.round(size/1024))} KB of roughly 5,000 KB available</p></section>
+  <section class="card stack"><h2>Privacy</h2><ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Nothing you write is transmitted. The app makes no network requests with your content.</li><li>AI analysis works through your clipboard. ChatGPT or Claude only receive a report when you paste it yourself.</li><li>Opening ChatGPT or Claude always requires a click.</li></ul></section>
+  <section class="card stack"><h2>Erase everything</h2><p class="muted">Deletes all projects, reviews, reports, drafts, and analyses from this browser. This cannot be undone.</p><div class="row"><button class="btn danger" data-act="eraseAll">Erase all data</button></div></section>`;
+}
+
+/* computed fields updated in place (keeps keyboard focus while typing) */
+const numOr=v=>v===''||v==null||isNaN(Number(v))?null:Number(v);
+const money=(n,c)=>n==null?'—':`${n<0?'−':''}${Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:2})} ${c||''}`.trim();
+function calc(k){
+  const m=S.drafts.monthly?.a,d=S.drafts.daily?.a;
+  if(k==='projprog')return(U.proj?.progress||0)+'%';
+  if(k==='timeTotal'){const t=(d?.time||[]).reduce((s,x)=>s+(numOr(x.min)||0),0),dp=(d?.time||[]).filter(x=>x.kind==='deep').reduce((s,x)=>s+(numOr(x.min)||0),0);return t?`Total ${Math.floor(t/60)}h ${t%60}m · deep work ${Math.floor(dp/60)}h ${dp%60}m`:''}
+  if(!m)return'';
+  if(k==='mnet'){const r=numOr(m.revenue),e=numOr(m.expenses);return r==null||e==null?'Enter both revenue and expenses':money(r-e,m.currency)}
+  if(k==='mrate'){const p=numOr(m.planned),c=numOr(m.completed);return p&&c!=null?Math.round(c/p*100)+'%':'—'}
+  if(k.startsWith('pp:')){const x=m.profit?.[k.slice(3)],r=numOr(x?.revenue),c=numOr(x?.cost);return r==null||c==null?'—':money(r-c,m.currency)}
+  return'';
+}
+function refreshCalcs(){document.querySelectorAll('[data-calc]').forEach(el=>el.textContent=calc(el.dataset.calc))}
+
+/* ================= Report ================= */
+function applyPreset(p){
+  const t=today(),ws=monday(t),ym=t.slice(0,7);let s=U.rep.start,e=U.rep.end;
+  if(p==='thisWeek'){s=ws;e=addDays(ws,6)}else if(p==='lastWeek'){s=addDays(ws,-7);e=addDays(ws,-1)}
+  else if(p==='thisMonth'){s=ym+'-01';e=monthEnd(ym)}else if(p==='lastMonth'){const d=parse(ym+'-01');d.setMonth(d.getMonth()-1);const y2=iso(d).slice(0,7);s=y2+'-01';e=monthEnd(y2)}
+  U.rep={preset:p,start:s||t,end:e||t};
+}
+function buildReport(start,end){
+  const rs=inRange(start,end),D=rs.filter(r=>r.type==='daily'),W=rs.filter(r=>r.type==='weekly'),M=rs.filter(r=>r.type==='monthly');
+  const L=[],one=t=>txt(t).replace(/\s*\n+\s*/g,' / ');
+  const li=(t,ind=0)=>L.push('  '.repeat(ind)+'- '+one(t));
+  const tag=r=>r.type==='daily'?fmtS(r.periodStart):r.type==='weekly'?'Week of '+fmtS(r.periodStart):parse(r.periodStart).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const sec=(title,fn,missMsg)=>{L.push('','## '+title,'');const n=L.length;fn();if(L.length===n)li('[Missing] '+missMsg)};
+  const each=(arr,key,prefix='')=>arr.forEach(r=>{if(txt(r.a[key]))li(`${prefix}${tag(r)}: ${r.a[key]}`)});
+  const st=stats(rs),obs=obstacles(rs),ms=missed(rs),lastW=W[W.length-1],lastD=D[D.length-1];
+  const rcas=S.rcas.filter(r=>txt(r.problem)&&(r.status!=='resolved'||(iso(new Date(r.updatedAt))>=start&&iso(new Date(r.updatedAt))<=end)));
+  const projects=S.projects,pname=id=>projects.find(p=>p.id===id)?.name||'Deleted project';
+  L.push('# PERSONAL BOARD OF DIRECTORS','# PERFORMANCE REVIEW REPORT');
+  sec('Review period',()=>{li(`${fmt(start)} to ${fmt(end)}`);li(`Reviews included: ${D.length} daily, ${W.length} weekly, ${M.length} monthly`);li(`Generated: ${fmtDT(Date.now())}`);li('Source: only the entries stored in this application. Nothing has been estimated or added.')},'');
+  sec('Executive summary',()=>{
+    if(!rs.length)return;
+    li(`${rs.length} review${rs.length>1?'s':''} recorded in this period.`);
+    if(st.wRated)li(`${st.wDel} of ${st.wRated} rated weekly commitments delivered (${pct(st.wRate)}); ${st.wPart} partial, ${st.wMiss} not delivered.`+(st.wUnrated?` ${st.wUnrated} commitments were not rated.`:''));
+    if(st.dTotal)li(`${st.dDone} of ${st.dTotal} daily priorities completed (${pct(st.dRate)}).`);
+    W.forEach(r=>{if(txt(r.a.prev?.text)&&r.a.prev.result)li(`Primary outcome from the prior week (“${one(r.a.prev.text)}”): ${({achieved:'achieved',partial:'partly achieved',missed:'not achieved'})[r.a.prev.result]}.`)});
+    const sw=W.filter(r=>avgScore(r)!=null);if(sw.length)li(`Average self-rated score: ${(sw.reduce((s,r)=>s+avgScore(r),0)/sw.length).toFixed(1)} / 5 across ${sw.length} weekly scorecard${sw.length>1?'s':''} (subjective).`);
+    const ins=insight();if(ins)li(`Primary constraint on record: ${ins.text} (${ins.src}).`);
+    if(obs.length)li(`${obs.length} obstacle${obs.length>1?'s':''} recorded.`);
+  },'No reviews were saved for this period, so no summary can be given.');
+  sec('Key achievements',()=>{
+    each(D,'win','Biggest win, ');
+    D.forEach(r=>(r.a.priorities||[]).forEach(p=>{if(txt(p.t)&&p.done)li(`Completed priority, ${tag(r)}: ${p.t}`)}));
+    each(D,'completedNotes','Also completed, ');
+    W.forEach(r=>(r.a.commitments||[]).forEach(c=>{if(txt(c.t)&&c.status==='delivered')li(`Delivered, ${tag(r)}: ${c.t}${txt(c.evidence)?' (evidence: '+one(c.evidence)+')':' (no evidence recorded)'}`)}));
+    each(W,'evidence','Evidence of outcomes, ');
+    projects.filter(p=>p.status==='Done').forEach(p=>li(`Project marked done: ${p.name}${txt(p.outcome)?' ('+one(p.outcome)+')':''}`));
+  },'No wins, completed priorities, or delivered commitments were recorded.');
+  sec('Missed commitments',()=>{
+    ms.forEach(m=>li(`${m.kind}, ${tag(m.r)}: ${m.t}`));
+    each(W,'unfinished','Unfinished, ');each(D,'avoided','Avoided or postponed, ');
+  },'No missed commitments were recorded. This means none were entered, not necessarily that none occurred.');
+  sec('Performance metrics',()=>{
+    if(st.wRated)li(`Weekly commitments delivered: ${st.wDel} / ${st.wRated} (${pct(st.wRate)})`);else li('[Missing] No rated weekly commitments.');
+    if(st.dTotal)li(`Daily priorities completed: ${st.dDone} / ${st.dTotal} (${pct(st.dRate)})`);else li('[Missing] No daily priorities recorded.');
+    const tmin=D.reduce((s,r)=>s+(r.a.time||[]).reduce((x,t)=>x+(numOr(t.min)||0),0),0),dmin=D.reduce((s,r)=>s+(r.a.time||[]).filter(t=>t.kind==='deep').reduce((x,t)=>x+(numOr(t.min)||0),0),0);
+    if(tmin)li(`Time tracked: ${(tmin/60).toFixed(1)} h, of which deep work ${(dmin/60).toFixed(1)} h`);
+    W.forEach(r=>{const has=SCORES.some(([k])=>r.a.scores?.[k]);if(!has){li(`[Missing] Scorecard not completed, ${tag(r)}.`);return}
+      li(`Self-rated scorecard, ${tag(r)} (subjective, 1–5):`);SCORES.forEach(([k,l])=>{const v=r.a.scores?.[k];li(`${l}: ${v?v+' / 5':'not rated'}${txt(r.a.scoreEvidence?.[k])?' — supporting metric: '+one(r.a.scoreEvidence[k]):v?' — no supporting metric':''}`,1)})});
+    if(!W.length)li('[Missing] No weekly scorecard in this period.');
+    M.forEach(r=>{const a=r.a,rev=numOr(a.revenue),exp=numOr(a.expenses);
+      li(`Financials, ${tag(r)}: revenue ${rev==null?'[Missing]':money(rev,a.currency)}; expenses ${exp==null?'[Missing]':money(exp,a.currency)}; net ${rev==null||exp==null?'[Missing]':money(rev-exp,a.currency)}`);
+      if(txt(a.otherMetrics))li(`Other metrics, ${tag(r)}: ${a.otherMetrics}`);
+      const p=numOr(a.planned),c=numOr(a.completed);if(p!=null||c!=null)li(`Planned versus completed, ${tag(r)}: ${c??'[Missing]'} of ${p??'[Missing]'}${p&&c!=null?' ('+Math.round(c/p*100)+'%)':''}${txt(a.plannedNotes)?' — '+one(a.plannedNotes):''}`);
+      Object.entries(a.profit||{}).forEach(([id,x])=>{const pr=numOr(x.revenue),pc=numOr(x.cost);if(pr!=null||pc!=null)li(`Project profitability, ${pname(id)}: revenue ${pr==null?'[Missing]':money(pr,a.currency)}, cost ${pc==null?'[Missing]':money(pc,a.currency)}, profit ${pr==null||pc==null?'[Missing]':money(pr-pc,a.currency)}`)});
+      if(txt(a.quarterly))li(`Quarterly goals, ${tag(r)}: ${a.quarterly}`);if(txt(a.annual))li(`Annual goals, ${tag(r)}: ${a.annual}`)});
+    projects.forEach(p=>li(`Project “${p.name}”: ${p.progress||0}% progress, status ${p.status}, priority ${p.priority}, deadline ${p.deadline?fmt(p.deadline):'[Missing]'}`));
+  },'');
+  sec('Strongest capabilities',()=>{each(W,'well','Did exceptionally well, ');each(W,'bestReturn','Greatest return, ');each(W,'strengths','Strengths to repeat, ')},'No strengths were recorded. Complete the Excellence section of a weekly review.');
+  sec('Biggest bottlenecks',()=>{
+    obs.forEach(o=>li(`${tag(o.r)}: ${o.t}${o.cat?' [type: '+o.cat+']':''}${o.recur==='yes'?' [occurred before]':''}`));
+    cluster(obstacles(S.reviews.filter(r=>r.periodStart<=end))).filter(c=>c.items.length>=2).forEach(c=>li(`Recurring across history (${c.items.length} times): ${c.t}`));
+    projects.filter(p=>txt(p.bottleneck)&&p.status!=='Done').forEach(p=>li(`Project “${p.name}”: ${p.bottleneck}`));
+    each(M,'recurring','Recurring bottlenecks noted, ');
+  },'No obstacles were recorded.');
+  sec('Root cause analysis',()=>{
+    obs.filter(o=>o.root).forEach(o=>li(`${o.t} — stated root cause (not yet tested): ${o.root}`));
+    rcas.forEach(r=>{li(`Five Whys${r.primary?' (primary constraint)':''}${r.status==='resolved'?' (resolved)':''}: ${r.problem}`);
+      r.whys.forEach((w,i)=>{if(txt(w.t))li(`Why ${i+1} [${w.kind==='fact'?'Verified fact':'Hypothesis'}]: ${w.t}`,1)});
+      li(txt(r.intervention)?`Proposed intervention: ${r.intervention}`:'[Missing] No intervention proposed.',1)});
+  },'No root causes were recorded. Run a Five Whys on the main obstacle.');
+  sec('Decision quality review',()=>{each(W,'bestDecisions','Best decisions, ');each(W,'changeDecisions','Decisions I would change, ');each(W,'infoAvailable','Information available at the time, ');each(W,'decisionLearned','Lesson, ');each(M,'decisions','Strategic decisions, ');
+    M.forEach(r=>Object.entries(r.a.projectDecisions||{}).forEach(([id,x])=>{if(x.d)li(`${tag(r)}: ${x.d} “${pname(id)}”${txt(x.why)?' — '+one(x.why):''}`)}))},'No decisions were audited.');
+  sec('Opportunities for improvement',()=>{each(D,'learned','Lesson, ');each(W,'changeDecisions','Would do differently, ');each(W,'expectedObstacles','Anticipated obstacle, ');each(M,'opportunities','Opportunities for next month, ')},'No lessons or opportunities were recorded.');
+  sec('Activities to eliminate',()=>{each(W,'wasted','Time wasted, ');each(W,'stop','Stop doing, ');each(W,'delegate','Automate or delegate, ');each(W,'lessAttention','Give less attention, ');
+    M.forEach(r=>Object.entries(r.a.projectDecisions||{}).forEach(([id,x])=>{if(x.d==='eliminate'||x.d==='pause')li(`${x.d==='pause'?'Pause':'Eliminate'} project “${pname(id)}”${txt(x.why)?' — '+one(x.why):''}`)}))},'No low-value activities were identified.');
+  sec('Strategic recommendations',()=>{
+    const n=L.length;
+    cluster(missed(S.reviews.filter(r=>r.periodStart<=end))).filter(c=>c.items.length>=2).forEach(c=>li(`“${c.t}” has been missed ${c.items.length} times in your reviews. Re-scope it, schedule a fixed block for it, delegate it, or drop it.`));
+    rcas.filter(r=>r.status!=='resolved'&&txt(r.intervention)).forEach(r=>{const h=r.whys.filter(w=>txt(w.t)&&w.kind!=='fact').length,t=r.whys.filter(w=>txt(w.t)).length;li(`Act on your intervention for “${one(r.problem)}”: ${r.intervention}.${h?` ${h} of ${t} causes are still hypotheses; verify them first.`:''}`)});
+    obs.filter(o=>o.recur==='yes').forEach(o=>li(`You marked “${o.t}” as a repeat obstacle. Treat it as a system problem and run a Five Whys if you have not.`));
+    if(st.wRated>=3&&st.wRate<.5)li(`Only ${st.wDel} of ${st.wRated} commitments were delivered. Commit to fewer items next period until delivery exceeds what you promise.`);
+    W.forEach(r=>{if(txt(r.a.stop))li(`Stop (${tag(r)}): ${r.a.stop}`);if(txt(r.a.delegate))li(`Automate or delegate (${tag(r)}): ${r.a.delegate}`);if(txt(r.a.strengths))li(`Repeat (${tag(r)}): ${r.a.strengths}`)});
+    if(L.length>n)L.splice(n,0,'These recommendations restate your own entries and counts. No outside judgement has been added.','');
+  },'Not enough recorded evidence to derive recommendations.');
+  sec('Seven-day execution plan',()=>{
+    if(lastW&&txt(lastW.a.outcome)){li(`Primary outcome: ${lastW.a.outcome}`);(lastW.a.actions||[]).forEach((a,i)=>{if(txt(a))li(`Supporting action ${i+1}: ${a}`)});li(lastW.a.deadline?`Deadline: ${fmt(lastW.a.deadline)}`:'[Missing] No deadline set for the primary outcome.');li(txt(lastW.a.criteria)?`Success criteria: ${lastW.a.criteria}`:'[Missing] No measurable success criteria.')}
+    else li('[Missing] No primary outcome defined. Complete “Next week’s strategy” in a weekly review.');
+    if(lastD&&txt(lastD.a.tomorrow))li(`Next most important action (from ${tag(lastD)}): ${lastD.a.tomorrow}`);
+    activeProjects().filter(p=>txt(p.nextAction)).forEach(p=>li(`Project “${p.name}” next critical action: ${p.nextAction}${p.deadline?' (project deadline '+fmt(p.deadline)+')':''}`));
+  },'');
+  sec('Accountability commitments',()=>{
+    if(lastW){const a=lastW.a;if(txt(a.outcome))li(`I commit to: ${a.outcome}${a.deadline?' by '+fmt(a.deadline):''}`);if(txt(a.criteria))li(`I will know it is done when: ${a.criteria}`);if(txt(a.expectedObstacles))li(`Expected obstacles: ${a.expectedObstacles}`);if(txt(a.ifPlan)||txt(a.thenPlan))li(`If ${one(a.ifPlan)||'[Missing]'}, then ${one(a.thenPlan)||'[Missing]'}`)}
+    const soon=addDays(today(),14);activeProjects().filter(p=>p.deadline&&p.deadline<=soon).forEach(p=>li(`Project deadline ${p.deadline<today()?'overdue':'within 14 days'}: “${p.name}” on ${fmt(p.deadline)}`));
+  },'No commitments recorded. Set a primary outcome, a deadline, and an if-then plan in a weekly review.');
+  const strip=r=>JSON.parse(JSON.stringify(r,(k,v)=>k==='file'&&v&&v.data?{name:v.name,size:v.size}:v));
+  return{id:uid(),title:`Performance review · ${fmtS(start)} – ${fmt(end)}`,periodStart:start,periodEnd:end,createdAt:Date.now(),reviewCount:rs.length,markdown:L.join('\n').trim()+'\n',data:{reviews:rs.map(strip),projects:strip(projects),rootCauseAnalyses:strip(rcas)},saved:false};
+}
+function mdToHtml(md){
+  const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\[Missing\]/g,'<span class="tagm">Missing</span>');
+  let out='',depth=0;const close=to=>{while(depth>to){out+='</ul>';depth--}};
+  md.split('\n').forEach(l=>{
+    const m=l.match(/^(\s*)- (.*)$/);
+    if(m){const d=m[1].length/2+1;while(depth<d){out+='<ul>';depth++}close(d);out+=`<li${m[2].startsWith('[Missing]')?' class="miss"':''}>${inl(m[2])}</li>`;return}
+    close(0);
+    if(l.startsWith('# '))out+=`<h1>${inl(l.slice(2))}</h1>`;else if(l.startsWith('## '))out+=`<h2>${inl(l.slice(3))}</h2>`;else if(l.trim())out+=`<p>${inl(l)}</p>`;
+  });close(0);return out;
+}
+function reportPdf(r){
+  const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'a4'});const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),mx=54;let y=64;
+  const clean=s=>s.replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/[–—−]/g,'-').replace(/…/g,'...').replace(/·/g,'-').replace(/[^\x00-\xFF]/g,'?');
+  const put=(text,{size=10,bold=false,indent=0,gap=4,color=[30,41,50]}={})=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);doc.setTextColor(...color);
+    doc.splitTextToSize(clean(text),W-mx*2-indent).forEach(line=>{if(y>H-60){doc.addPage();y=60}doc.text(line,mx+indent,y);y+=size*1.38});y+=gap};
+  r.markdown.split('\n').forEach((l,i)=>{
+    const m=l.match(/^(\s*)- (.*)$/);
+    if(m){const ind=12+m[1].length*7;if(y>H-60){doc.addPage();y=60}doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(30,41,50);doc.text('-',mx+ind-9,y);put(m[2],{indent:ind,gap:2})}
+    else if(l.startsWith('# '))put(l.slice(2),i===0?{size:10,bold:true,color:[100,116,139],gap:2}:{size:20,bold:true,gap:10});
+    else if(l.startsWith('## ')){y+=10;if(y>H-90){doc.addPage();y=60}put(l.slice(3).toUpperCase(),{size:10,bold:true,color:[3,130,136],gap:0});doc.setDrawColor(203,213,225);doc.line(mx,y-2,W-mx,y-2);y+=10}
+    else if(l.trim())put(l,{color:[71,85,105]});
+  });
+  const n=doc.getNumberOfPages();for(let p=1;p<=n;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(120,130,145);doc.text(clean(`Personal Board of Directors - ${r.title} - page ${p} of ${n}`),mx,H-28)}
+  return doc.output('blob');
+}
+const aiPayload=r=>`${AI_PROMPT}\n\n==================== MY PERFORMANCE REPORT ====================\n\n${r.markdown}`;
+const fileBase=r=>`board-report-${r.periodStart}_to_${r.periodEnd}`;
+
+/* ================= Actions ================= */
+const A={
+  add(d){get(d.path).push(JSON.parse(d.tpl));save();render();const ins=document.querySelectorAll(`[data-bind^="${d.path}."]`);[...ins].filter(e=>e.matches('input:not([type=checkbox]),textarea')).slice(-3).find(e=>!e.value)?.focus()},
+  rm(d){get(d.path).splice(+d.i,1);save();render()},
+  newProject(){U.proj={name:'',outcome:'',deadline:'',priority:'High',status:'Not started',progress:0,bottleneck:'',nextAction:''};projectDlg()},
+  editProject(d){U.proj={...S.projects.find(p=>p.id===d.id)};projectDlg()},
+  saveProject(d,el,ev){ev.preventDefault();const p=U.proj;if(!txt(p.name)){$('#'+fid('U.proj.name')).focus();toast('Give the project a name.','err');return}
+    p.progress=Number(p.progress)||0;p.updatedAt=Date.now();if(p.status==='Done')p.progress=100;
+    if(p.id)S.projects[S.projects.findIndex(x=>x.id===p.id)]=p;else S.projects.push({...p,id:'p'+uid(),createdAt:Date.now()});
+    save();closeDlg();render();toast('Project saved.')},
+  async delProject(d){const p=S.projects.find(x=>x.id===d.id);if(await confirmBox('Delete project?',`“${p.name}” will be removed. Reviews that mention it are kept.`,'Delete project')){S.projects=S.projects.filter(x=>x.id!==d.id);R.S=S;save();render()}},
+  saveReview(d){
+    const dr=draft(d.type);if(!dr.date){toast('Choose a date for this review.','err');return}
+    const[ps,pe]=periodOf(d.type,dr.date),now=Date.now();
+    const a=JSON.parse(JSON.stringify(dr.a));
+    const anyText=JSON.stringify(a).replace(/"(status|kind|cat|recur|currency|blockerCat)":"[^"]*"/g,'').match(/:"[^"]+"|:[1-9]/);
+    if(!anyText){toast('This review is empty. Answer at least one question first.','err');return}
+    let rev;
+    if(dr.id&&(rev=S.reviews.find(r=>r.id===dr.id)))Object.assign(rev,{periodStart:ps,periodEnd:pe,a,updatedAt:now});
+    else{rev={id:'r'+uid(),type:d.type,periodStart:ps,periodEnd:pe,createdAt:now,updatedAt:now,a};S.reviews.push(rev)}
+    delete S.drafts[d.type];U.saved[d.type]=rev.id;flush();render();window.scrollTo(0,0);toast('Review saved.');
+  },
+  async discard(d){if(S.drafts[d.type]?.touched&&!await confirmBox('Clear this draft?','Unsaved answers in this draft will be removed. Saved reviews are not affected.','Clear draft'))return;delete S.drafts[d.type];delete U.saved[d.type];save();render()},
+  async editReview(d){const r=S.reviews.find(x=>x.id===d.id),cur=S.drafts[r.type];
+    if(cur?.touched&&cur.id!==r.id&&!await confirmBox('Replace the current draft?',`You have an unsaved ${r.type} draft. Opening this review will discard it.`,'Discard draft and open'))return;
+    S.drafts[r.type]={type:r.type,id:r.id,date:r.type==='monthly'?r.periodStart.slice(0,7):r.periodStart,a:JSON.parse(JSON.stringify({...newDraft(r.type).a,...r.a}))};delete U.saved[r.type];save();location.hash=r.type;if(U.route===r.type)render()},
+  async delReview(d){const r=S.reviews.find(x=>x.id===d.id);if(await confirmBox('Delete review?',`${periodLabel(r)} (${r.type}) will be permanently removed from history.`,'Delete review')){S.reviews=S.reviews.filter(x=>x.id!==d.id);if(S.drafts[r.type]?.id===r.id)delete S.drafts[r.type];save();render()}},
+  importActions(){const d=draft('weekly'),prev=byType('weekly').filter(r=>r.periodStart<monday(d.date)).pop();const add=(prev.a.actions||[]).filter(txt).map(t=>({t,status:'',evidence:''}));d.a.commitments=[...d.a.commitments.filter(c=>txt(c.t)),...add];d.touched=true;save();render();toast(add.length+' commitments imported.')},
+  newRca(d,el,ev,seed){S.rcas.push({id:'c'+uid(),problem:seed?.problem||'',whys:[0,1,2,3,4].map(i=>({t:i===0&&seed?.why||'',kind:'hypothesis'})),intervention:'',primary:false,status:'open',createdAt:Date.now(),updatedAt:Date.now()});save();if(U.route!=='root-cause')location.hash='root-cause';else render();setTimeout(()=>$('#'+fid(`S.rcas.${S.rcas.length-1}.problem`))?.focus(),50)},
+  rcaFrom(d){const o=draft('weekly').a.obstacles[+d.i];if(!txt(o.t)){toast('Describe what stopped you first.','err');return}A.newRca(d,null,null,{problem:o.t,why:o.root})},
+  rcaPrimary(d){S.rcas.forEach(r=>r.primary=r.id===d.id?!r.primary:false);save();render()},
+  rcaStatus(d){const r=S.rcas.find(x=>x.id===d.id);r.status=r.status==='resolved'?'open':'resolved';r.updatedAt=Date.now();save();render()},
+  async delRca(d){if(await confirmBox('Delete analysis?','This root cause analysis will be permanently removed.','Delete analysis')){S.rcas=S.rcas.filter(x=>x.id!==d.id);save();render()}},
+  genReport(d){if(d.preset)applyPreset(d.preset);const{start,end}=U.rep;if(!start||!end||start>end){toast('Choose a valid period: the start date must be on or before the end date.','err');if(U.route!=='reports')location.hash='reports';return}
+    U.report=buildReport(start,end);if(U.route!=='reports')location.hash='reports';else render();setTimeout(()=>$('#reportBody')?.closest('section').scrollIntoView({block:'start'}),60)},
+  reportFor(d){const r=S.reviews.find(x=>x.id===d.id);U.rep={preset:'custom',start:r.periodStart,end:r.periodEnd};A.genReport({})},
+  saveReport(){const r=U.report;if(r.saved)return;r.saved=true;S.reports.push(r);flush();render();toast('Report saved.')},
+  openReport(d){U.report=S.reports.find(x=>x.id===d.id);U.rep={preset:'custom',start:U.report.periodStart,end:U.report.periodEnd};render();$('#reportBody')?.closest('section').scrollIntoView({block:'start'})},
+  async delReport(d){if(await confirmBox('Delete report?','This saved report will be permanently removed. Your reviews are kept.','Delete report')){S.reports=S.reports.filter(x=>x.id!==d.id);if(U.report?.id===d.id)U.report=null;save();render()}},
+  copyReport(){copyText(U.report.markdown,'Report copied.')},
+  copyAI(d){copyText(aiPayload(U.report),d.open?`Copied. Paste it into ${AI_TARGETS[d.open].name}.`:'Report and analysis prompt copied. Paste into ChatGPT or Claude.')},
+  showPrompt(){openDlg(`<div class="stack"><h2>AI analysis prompt</h2><p class="muted small">Placed in front of your report when you copy for AI analysis.</p><textarea rows="14" readonly id="promptView">${esc(AI_PROMPT)}</textarea><div class="row end"><button class="btn" data-dlg="0">Close</button></div></div>`)},
+  async dlPdf(d,el){if(!window.jspdf){toast('The PDF library did not load. Check your connection, or use Markdown.','err');return}el.disabled=true;const t=el.textContent;el.textContent='Preparing PDF…';try{await saveFile(fileBase(U.report)+'.pdf',reportPdf(U.report),'application/pdf')}catch(e){toast('Could not create the PDF: '+e.message,'err')}el.disabled=false;el.textContent=t},
+  dlMd(){saveFile(fileBase(U.report)+'.md',U.report.markdown,'text/markdown')},
+  dlJson(){const r=U.report;saveFile(fileBase(r)+'.json',JSON.stringify({title:r.title,periodStart:r.periodStart,periodEnd:r.periodEnd,generatedAt:new Date(r.createdAt).toISOString(),markdown:r.markdown,data:r.data},null,2),'application/json')},
+  exportAll(){saveFile(`personal-board-backup-${today()}.json`,JSON.stringify({app:'personal-board-of-directors',exportedAt:new Date().toISOString(),state:S},null,2),'application/json')},
+  async eraseAll(){if(await confirmBox('Erase all data?','Every project, review, report, draft, and analysis in this browser will be deleted. Export a backup first if you might need it.','Erase everything')){S=blankState();R.S=S;U.report=null;U.saved={};try{await Services.storage.clear()}catch(e){}render();toast('All data erased.')}}
+};
+function setState(next){S={...blankState(),...next,drafts:next.drafts||{}};R.S=S}
+async function importFile(file){
+  try{const j=JSON.parse(await file.text()),st=j.state||j;
+    if(!Array.isArray(st.projects)||!Array.isArray(st.reviews))throw new Error('this file is not a Personal Board of Directors backup');
+    if((S.reviews.length||S.projects.length)&&!await confirmBox('Replace current data?',`The backup contains ${st.projects.length} projects and ${st.reviews.length} reviews. It will replace everything currently stored in this browser.`,'Replace with backup'))return;
+    setState(st);U.report=null;flush();render();toast('Backup imported.');
+  }catch(e){toast('Import failed: '+e.message+'.','err')}
+}
+function attachFile(file){
+  if(file.size>300*1024){toast(`${file.name} is ${Math.round(file.size/1024)} KB. The limit is 300 KB; add a link instead.`,'err');return}
+  const fr=new FileReader();fr.onload=()=>{draft('daily').a.evidence.push({label:'',file:{name:file.name,size:file.size,data:fr.result}});save();render()};fr.onerror=()=>toast('Could not read that file.','err');fr.readAsDataURL(file);
+}
+
+/* ================= Events ================= */
+function onBind(e){
+  const el=e.target.closest('[data-bind]');if(!el)return;
+  if(el.type==='radio'&&!el.checked)return;
+  const p=el.dataset.bind,v=el.type==='checkbox'?el.checked:el.type==='radio'||el.type==='range'?Number(el.value):el.value;
+  set(p,v);
+  if(p.startsWith('S.')){const m=p.match(/^S\.drafts\.(\w+)\./);if(m)S.drafts[m[1]].touched=true;const c=p.match(/^S\.rcas\.(\d+)\./);if(c)S.rcas[c[1]].updatedAt=Date.now();save()}
+  if(p==='U.rep.preset'&&v!=='custom')applyPreset(v);
+  if((p==='U.rep.start'||p==='U.rep.end')&&e.type==='input')U.rep.preset='custom';
+  if(p==='S.drafts.weekly.date'&&v)S.drafts.weekly.date=monday(v);
+  refreshCalcs();
+  if(e.type==='change'&&el.dataset.rr)render();
+}
+document.addEventListener('input',onBind);
+document.addEventListener('change',e=>{
+  const f=e.target.closest('[data-file]');
+  if(f){const file=f.files[0];f.value='';if(file)(f.dataset.file==='import'?importFile:attachFile)(file);return}
+  if(e.target.matches('select,input[type=date],input[type=month]'))onBind(e);
+});
+document.addEventListener('click',e=>{
+  const dl=e.target.closest('[data-dlg]');if(dl){e.preventDefault();closeDlg(dl.dataset.dlg==='1');return}
+  const el=e.target.closest('[data-act]');if(!el)return;
+  if(el.tagName!=='A')e.preventDefault();
+  Promise.resolve(A[el.dataset.act](el.dataset,el,e)).catch(err=>{console.error(err);toast('Something went wrong: '+err.message,'err')});
+});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('label.btn')){e.preventDefault();e.target.querySelector('input').click()}});
+$('#dlg').addEventListener('close',()=>{if(dlgRes){const r=dlgRes;dlgRes=null;r(false)}});
+$('#dlg').addEventListener('submit',e=>e.preventDefault());
+window.addEventListener('hashchange',route);
+window.addEventListener('pagehide',flush);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
+
+(async function boot(){
+  $('#main').innerHTML='<div class="wrap"><p class="muted">Loading your data…</p></div>';
+  try{const st=await Services.storage.load();if(st)setState(st);else R.S=S;$('#savestate').textContent='Stored on this device only'}
+  catch(e){R.S=S;U.storageOk=false;$('#savestate').className='savestate err';$('#savestate').textContent='Browser storage is unavailable. Entries will not persist; export backups from Data & privacy.'}
+  route();
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,13 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE user (id TEXT PRIMARY KEY,name TEXT NOT NULL,email TEXT NOT NULL UNIQUE,emailVerified INTEGER NOT NULL,image TEXT,createdAt INTEGER NOT NULL,updatedAt INTEGER NOT NULL);
+CREATE TABLE session(id TEXT PRIMARY KEY,expiresAt INTEGER NOT NULL,token TEXT NOT NULL UNIQUE,createdAt INTEGER NOT NULL,updatedAt INTEGER NOT NULL,ipAddress TEXT,userAgent TEXT,userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE);
+CREATE INDEX session_owner ON session(userId);
+CREATE TABLE account(id TEXT PRIMARY KEY,accountId TEXT NOT NULL,providerId TEXT NOT NULL,userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,accessToken TEXT,refreshToken TEXT,idToken TEXT,accessTokenExpiresAt INTEGER,refreshTokenExpiresAt INTEGER,scope TEXT,password TEXT,createdAt INTEGER NOT NULL,updatedAt INTEGER NOT NULL);
+CREATE INDEX account_owner ON account(userId);
+CREATE TABLE verification(id TEXT PRIMARY KEY,identifier TEXT NOT NULL,value TEXT NOT NULL,expiresAt INTEGER NOT NULL,createdAt INTEGER NOT NULL,updatedAt INTEGER NOT NULL);
+CREATE INDEX verification_identifier ON verification(identifier);
+CREATE TABLE board_state(user_id TEXT PRIMARY KEY REFERENCES user(id) ON DELETE CASCADE,revision INTEGER NOT NULL DEFAULT 0,data TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE work_entry(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,project_id TEXT NOT NULL,project_name TEXT NOT NULL,description TEXT NOT NULL,work_date TEXT NOT NULL,timezone TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE INDEX work_owner_date ON work_entry(user_id,work_date);
+CREATE TABLE request_limit(key TEXT PRIMARY KEY,count INTEGER NOT NULL,expires INTEGER NOT NULL);
+CREATE TABLE local_mail(id TEXT PRIMARY KEY,email TEXT NOT NULL,url TEXT NOT NULL,kind TEXT NOT NULL,created_at TEXT NOT NULL);
